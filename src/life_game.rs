@@ -96,19 +96,20 @@ impl Game {
 
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let border = std::iter::repeat("-").take(self.width).collect::<String>();
-        let mut output = String::with_capacity(((self.width + 2) * (self.height + 2)) * 2);
+        let border = std::iter::repeat("━").take(self.width).collect::<String>();
+        // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
+        let mut output = String::with_capacity(((self.width + 2) * (self.height + 2)) * 4);
 
-        output.push_str("+");
+        output.push_str("┏");
         output.push_str(&border);
-        output.push_str("+\n");
+        output.push_str("┓\n");
 
         for row in self.game_state.iter() {
-            output.push_str("|");
+            output.push_str("┃");
             for cell in row.iter() {
                 let cell_output = {
                     if *cell {
-                        String::from("#")
+                        String::from("█")
                     } else {
                         String::from(" ")
                     }
@@ -116,12 +117,12 @@ impl Display for Game {
 
                 output.push_str(format!("{}", cell_output).as_str());
             }
-            output.push_str("|\n");
+            output.push_str("┃\n");
         }
 
-        output.push_str("+");
+        output.push_str("┗");
         output.push_str(&border);
-        output.push_str("+\n");
+        output.push_str("┛\n");
 
         write!(f, "{}", output)
     }

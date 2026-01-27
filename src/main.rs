@@ -18,6 +18,7 @@ fn main() {
     // pentadecathlons
     builder::pentadecathlon(&mut starting_state, 19, 10);
     builder::pentadecathlon(&mut starting_state, 12, 45);
+    builder::pentadecathlon(&mut starting_state, 34, 56);
 
     let mut game = Game::from_data(starting_state);
 
