@@ -1,7 +1,9 @@
+pub mod builder;
+
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
-type CellData = Vec<Vec<bool>>;
+pub type CellData = Vec<Vec<bool>>;
 
 pub struct Game {
     width: usize,
