@@ -18,7 +18,6 @@ fn main() {
     // pentadecathlons
     builder::pentadecathlon(&mut starting_state, 19, 10);
     builder::pentadecathlon(&mut starting_state, 12, 45);
-    builder::pentadecathlon(&mut starting_state, 34, 56);
 
     let mut game = Game::from_data(starting_state);
 
@@ -26,8 +25,6 @@ fn main() {
         print!("\x1B[2J\x1B[1;1H");
         print!("{}", game);
         thread::sleep(Duration::from_millis(100));
-        // let mut a = String::new();
-        // io::stdin().read_line(&mut a);
         game.step();
     }
 
