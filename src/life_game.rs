@@ -10,17 +10,19 @@ pub struct Game {
     height: usize,
     iteration: usize,
     game_state: CellData,
-    previous_states: [u64; 32],
+    previous_states: [u64; Self::ITERATION_HISTORY],
 }
 
 impl Game {
+    const ITERATION_HISTORY: usize = 32;
+
     pub fn new(width: usize, height: usize) -> Self {
         Game {
             width,
             height,
             iteration: 0,
             game_state: vec![vec![false; width]; height],
-            previous_states: [0; 32],
+            previous_states: [0; Self::ITERATION_HISTORY],
         }
     }
 
@@ -30,7 +32,7 @@ impl Game {
             height: cells.len(),
             iteration: 0,
             game_state: cells,
-            previous_states: [0; 32],
+            previous_states: [0; Self::ITERATION_HISTORY],
         }
     }
 
@@ -53,7 +55,7 @@ impl Game {
             }
         }
 
-        self.previous_states[self.iteration % 32] = self.hash();
+        self.previous_states[self.iteration % Self::ITERATION_HISTORY] = self.hash();
         self.iteration += 1;
 
         self.game_state = new_state;
