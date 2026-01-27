@@ -31,11 +31,40 @@ impl Game {
 
         for row in 0 .. self.height {
             for column in 0 .. self.width {
-                // println!("{} {}", row, column);
+                let is_alive = self.cells[row][column];
+                let living_neighbours = self.get_living_neighbour_count(row, column);
+                // println!("{}, {} has {} live neighbours", row, column, living_neighbours);
+
+                if is_alive && (living_neighbours < 2 || living_neighbours > 3) {
+                    new_state[row][column] = false;
+                } else if !is_alive && living_neighbours == 3 {
+                    new_state[row][column] = true;
+                } else {
+                    new_state[row][column] = is_alive;
+                }
             }
         }
 
+
         self.cells = new_state;
+    }
+
+    fn get_living_neighbour_count(&self, row: usize, column: usize) -> u8 {
+        let above = if row > 0 { row - 1 } else { self.height - 1 };
+        let below = if row < self.height - 1 { row + 1 } else { 0 };
+        let left = if column > 0 { column - 1 } else { self.width - 1 };
+        let right = if column < self.width - 1 { column + 1 } else { 0 };
+
+        let count = if self.cells[above][left] { 1 } else { 0 }
+            + if self.cells[above][column] { 1 } else { 0 }
+            + if self.cells[above][right] { 1 } else { 0 }
+            + if self.cells[row][left] { 1 } else { 0 }
+            + if self.cells[row][right] { 1 } else { 0 }
+            + if self.cells[below][left] { 1 } else { 0 }
+            + if self.cells[below][column] { 1 } else { 0 }
+            + if self.cells[below][right] { 1 } else { 0 };
+
+        count
     }
 }
 
