@@ -48,10 +48,10 @@ impl Game {
     }
 
     fn get_living_neighbour_count(&self, row: usize, column: usize) -> u8 {
-        let above = if row > 0 { row - 1 } else { self.height - 1 };
-        let below = if row < self.height - 1 { row + 1 } else { 0 };
-        let left = if column > 0 { column - 1 } else { self.width - 1 };
-        let right = if column < self.width - 1 { column + 1 } else { 0 };
+        let above = (row + self.height - 1) % self.height;
+        let below = (row + 1) % self.height;
+        let left = (column + self.width - 1) % self.width;
+        let right = (column + 1) % self.width;
 
         let count = if self.cells[above][left] { 1 } else { 0 }
             + if self.cells[above][column] { 1 } else { 0 }
