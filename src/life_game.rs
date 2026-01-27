@@ -17,7 +17,7 @@ impl Game {
         }
     }
 
-    pub fn from_data (cells: CellData) -> Self {
+    pub fn from_data(cells: CellData) -> Self {
         Game {
             width: cells[0].len(),
             height: cells.len(),
@@ -28,8 +28,8 @@ impl Game {
     pub fn step(&mut self) {
         let mut new_state = vec![vec![false; self.width]; self.height];
 
-        for row in 0 .. self.height {
-            for column in 0 .. self.width {
+        for row in 0..self.height {
+            for column in 0..self.width {
                 let is_alive = self.cells[row][column];
                 let living_neighbours = self.get_living_neighbour_count(row, column);
                 // println!("{}, {} has {} live neighbours", row, column, living_neighbours);
@@ -43,7 +43,6 @@ impl Game {
                 }
             }
         }
-
 
         self.cells = new_state;
     }
@@ -70,8 +69,8 @@ impl Game {
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let border = std::iter::repeat("-").take(self.width).collect::<String>();
+        let mut output = String::with_capacity(((self.width + 2) * (self.height + 2)) * 2);
 
-        let mut output = String::new();
         output.push_str("+");
         output.push_str(&border);
         output.push_str("+\n");
@@ -96,7 +95,6 @@ impl Display for Game {
         output.push_str(&border);
         output.push_str("+\n");
 
-        write!(f, "{}", output)?;
-        Ok(())
+        write!(f, "{}", output)
     }
 }
