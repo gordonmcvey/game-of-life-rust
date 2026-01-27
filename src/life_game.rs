@@ -1,11 +1,14 @@
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 
 type CellData = Vec<Vec<bool>>;
 
 pub struct Game {
     width: usize,
     height: usize,
-    cells: CellData,
+    iteration: usize,
+    game_state: CellData,
+    previous_states: [u64; 32],
 }
 
 impl Game {
@@ -13,7 +16,9 @@ impl Game {
         Game {
             width,
             height,
-            cells: vec![vec![false; width]; height],
+            iteration: 0,
+            game_state: vec![vec![false; width]; height],
+            previous_states: [0; 32],
         }
     }
 
@@ -21,7 +26,9 @@ impl Game {
         Game {
             width: cells[0].len(),
             height: cells.len(),
-            cells,
+            iteration: 0,
+            game_state: cells,
+            previous_states: [0; 32],
         }
     }
 
@@ -30,7 +37,7 @@ impl Game {
 
         for row in 0..self.height {
             for column in 0..self.width {
-                let is_alive = self.cells[row][column];
+                let is_alive = self.game_state[row][column];
                 let living_neighbours = self.get_living_neighbour_count(row, column);
                 // println!("{}, {} has {} live neighbours", row, column, living_neighbours);
 
@@ -44,7 +51,24 @@ impl Game {
             }
         }
 
-        self.cells = new_state;
+        self.previous_states[self.iteration % 32] = self.hash();
+        self.iteration += 1;
+
+        self.game_state = new_state;
+    }
+
+    pub fn iteration(&self) -> usize {
+        self.iteration
+    }
+
+    pub fn has_stabilised(&self) -> bool {
+        self.previous_states.contains(&self.hash())
+    }
+
+    pub fn hash(&self) -> u64 {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        self.game_state.hash(&mut hasher);
+        hasher.finish()
     }
 
     fn get_living_neighbour_count(&self, row: usize, column: usize) -> u8 {
@@ -53,14 +77,14 @@ impl Game {
         let left = (column + self.width - 1) % self.width;
         let right = (column + 1) % self.width;
 
-        let count = if self.cells[above][left] { 1 } else { 0 }
-            + if self.cells[above][column] { 1 } else { 0 }
-            + if self.cells[above][right] { 1 } else { 0 }
-            + if self.cells[row][left] { 1 } else { 0 }
-            + if self.cells[row][right] { 1 } else { 0 }
-            + if self.cells[below][left] { 1 } else { 0 }
-            + if self.cells[below][column] { 1 } else { 0 }
-            + if self.cells[below][right] { 1 } else { 0 };
+        let count = if self.game_state[above][left] { 1 } else { 0 }
+            + if self.game_state[above][column] { 1 } else { 0 }
+            + if self.game_state[above][right] { 1 } else { 0 }
+            + if self.game_state[row][left] { 1 } else { 0 }
+            + if self.game_state[row][right] { 1 } else { 0 }
+            + if self.game_state[below][left] { 1 } else { 0 }
+            + if self.game_state[below][column] { 1 } else { 0 }
+            + if self.game_state[below][right] { 1 } else { 0 };
 
         count
     }
@@ -75,7 +99,7 @@ impl Display for Game {
         output.push_str(&border);
         output.push_str("+\n");
 
-        for row in self.cells.iter() {
+        for row in self.game_state.iter() {
             output.push_str("|");
             for cell in row.iter() {
                 let cell_output = {

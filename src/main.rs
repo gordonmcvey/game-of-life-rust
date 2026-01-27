@@ -1,7 +1,7 @@
 use life_game::Game;
 use std::cmp::min;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 mod life_game;
 
@@ -20,7 +20,7 @@ fn main() {
 
     let mut game = Game::from_data(starting_state);
 
-    loop {
+    while !game.has_stabilised() {
         print!("\x1B[2J\x1B[1;1H");
         print!("{}", game);
         thread::sleep(Duration::from_millis(100));
@@ -28,6 +28,8 @@ fn main() {
         // io::stdin().read_line(&mut a);
         game.step();
     }
+
+    println!("Game over!  State stabilised after {} iterations", game.iteration());
 }
 
 fn glider(state: &mut Vec<Vec<bool>>, x: usize, y: usize) {
