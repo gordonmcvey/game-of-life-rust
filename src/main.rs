@@ -13,12 +13,12 @@ fn main() {
 
     // gliders
     builder::glider(&mut starting_state, 0, 0);
-    builder::glider(&mut starting_state, 3, 73);
+    builder::glider(&mut starting_state, 73, 3);
 
     // pentadecathlons
-    builder::pentadecathlon(&mut starting_state, 19, 10);
-    builder::pentadecathlon(&mut starting_state, 12, 45);
-    builder::pentadecathlon(&mut starting_state, 34, 56);
+    builder::pentadecathlon(&mut starting_state, 10, 19);
+    builder::pentadecathlon(&mut starting_state, 45, 12);
+    builder::pentadecathlon(&mut starting_state, 56, 34);
 
     let mut game = Game::from_data(starting_state);
 

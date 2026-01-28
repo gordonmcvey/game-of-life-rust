@@ -27,13 +27,13 @@ pub fn u(state: &mut CellData, x: usize, y: usize) {
 }
 
 fn build(state: &mut CellData, x: usize, y: usize, build_list: Vec<(usize, usize)>) {
-    let width = state.len();
-    let height = state[0].len();
+    let width = state[0].len();
+    let height = state.len();
 
     let x = x % width;
     let y = y % height;
 
     for coords in build_list.iter() {
-        state[(x + coords.0) % width][(y + coords.1) % height] = true;
+        state[(y + coords.0) % height][(x + coords.1) % width] = true;
     }
 }

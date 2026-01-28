@@ -3,6 +3,9 @@ pub mod builder;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
+/// The vector that represents the game state.  The outer vector represents the rows (so its index
+/// is the Y axis coordinate), and the inner vector represents the cells for each column in that row
+/// (so its index is the X axis coordinate).
 pub type CellData = Vec<Vec<bool>>;
 
 pub struct Game {
