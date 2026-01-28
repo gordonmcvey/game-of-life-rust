@@ -14,9 +14,11 @@ fn main() {
 
     println!("Select puzzle:");
     println!("1: Preset starting state");
-    println!("2: Random population, 5%");
-    println!("3: Random population, 10%");
-    println!("4: Random population, 20%");
+    println!("2: A flock of seagulls (gliders)");
+    println!("3: Lightweight spaceship invasion");
+    println!("4: Random population, 5%");
+    println!("5: Random population, 10%");
+    println!("6: Random population, 20%");
     println!();
 
     io::stdin()
@@ -34,9 +36,19 @@ fn main() {
             builder::pentadecathlon(&mut starting_state, 45, 12);
             builder::pentadecathlon(&mut starting_state, 56, 34)
         },
-        Ok(2) => builder::randomise(&mut starting_state, 5),
-        Ok(3) => builder::randomise(&mut starting_state, 10),
-        Ok(4) => builder::randomise(&mut starting_state, 20),
+        Ok(2) => {
+            for col in (0 .. width - 12).step_by(10) {
+                builder::glider(&mut starting_state, col, 0);
+            }
+        },
+        Ok(3) => {
+            for row in (0 .. height - 6).step_by(6) {
+                builder::lightweight_spaceship(&mut starting_state, width - 10, row);
+            }
+        }
+        Ok(4) => builder::randomise(&mut starting_state, 5),
+        Ok(5) => builder::randomise(&mut starting_state, 10),
+        Ok(6) => builder::randomise(&mut starting_state, 20),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             return;

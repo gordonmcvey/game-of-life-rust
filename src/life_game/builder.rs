@@ -27,6 +27,17 @@ pub fn u(state: &mut CellData, x: usize, y: usize) {
     build(state, x, y, build_list);
 }
 
+pub fn lightweight_spaceship(state: &mut CellData, x: usize, y: usize) {
+    let build_list: Vec<(usize, usize)> = vec!(
+        (0, 1),
+        (1, 0),
+        (2, 0), (2, 4),
+        (3, 0), (3, 1), (3, 2), (3, 3),
+    );
+
+    build(state, x, y, build_list)
+}
+
 pub fn randomise(state: &mut CellData, probability: u32) {
     match probability {
         0..=100 => (),
