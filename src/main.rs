@@ -68,13 +68,11 @@ fn main() {
 }
 
 fn space_for_game() -> (usize, usize) {
-    let dimensions = term_size::dimensions();
-    if dimensions.is_some() {
-        let raw_dimensions = dimensions.unwrap();
-        return (
-            min(raw_dimensions.0, 200),
-            min(raw_dimensions.1, 50),
-        );
+    match term_size::dimensions() {
+        Some(dimensions) => (
+            min(dimensions.0, 200),
+            min(dimensions.1, 50),
+        ),
+        None => (80, 25),
     }
-    (80, 25)
 }
