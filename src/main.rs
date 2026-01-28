@@ -33,14 +33,22 @@ fn main() {
                 builder::lightweight_spaceship(&mut starting_state, width - 10, row);
             }
         }
-        Ok(4) => builder::randomise(&mut starting_state, 5),
-        Ok(5) => builder::randomise(&mut starting_state, 10),
-        Ok(6) => builder::randomise(&mut starting_state, 20),
+        Ok(4) => {
+            for row in (1 .. height - 23).step_by(21) {
+                for column in (1 .. width - 33).step_by(31) {
+                    builder::achim_p144(&mut starting_state, column, row);
+                }
+            }
+        },
+        Ok(5) => builder::randomise(&mut starting_state, 5),
+        Ok(6) => builder::randomise(&mut starting_state, 10),
+        Ok(7) => builder::randomise(&mut starting_state, 20),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             return;
         },
     };
+
 
     let mut game = Game::from_data(starting_state);
 
@@ -61,9 +69,10 @@ fn prompt() -> Result<i32, ParseIntError> {
     println!("1: Preset starting state");
     println!("2: A flock of seagulls (gliders)");
     println!("3: Lightweight spaceship invasion!");
-    println!("4: Random population, 5%");
-    println!("5: Random population, 10%");
-    println!("6: Random population, 20%");
+    println!("4: Achim's P144 long period oscillator");
+    println!("5: Random population, 5%");
+    println!("6: Random population, 10%");
+    println!("7: Random population, 20%");
     println!();
 
     io::stdin()

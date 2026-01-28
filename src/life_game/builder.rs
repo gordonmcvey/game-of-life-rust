@@ -38,6 +38,36 @@ pub fn lightweight_spaceship(state: &mut CellData, x: usize, y: usize) {
     build(state, x, y, build_list)
 }
 
+pub fn achim_p144(state: &mut CellData, x: usize, y: usize) {
+    let build_list: Vec<(usize, usize)> = vec!(
+        (0, 0), (0, 1), (0, 26), (0, 27),
+        (1, 0), (1, 1), (1, 26), (1, 27),
+
+        (2, 18), (2, 19),
+        (3, 17), (3, 20),
+        (4, 18), (4, 19),
+
+        (5, 14),
+        (6, 13), (6, 15),
+        (7, 12), (7, 16),
+        (8, 12), (8, 15),
+
+        (10, 12), (10, 15),
+        (11, 11), (11, 15),
+        (12, 12), (12, 14),
+        (13, 13),
+
+        (14, 8), (14, 9),
+        (15, 7), (15, 10),
+        (16, 8), (16, 9),
+
+        (17, 0), (17, 1), (17, 26), (17, 27),
+        (18, 0), (18, 1), (18, 26), (18, 27),
+    );
+
+    build(state, x, y, build_list)
+}
+
 pub fn randomise(state: &mut CellData, probability: u32) {
     match probability {
         0..=100 => (),
