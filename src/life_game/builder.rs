@@ -1,4 +1,5 @@
 use crate::life_game::CellData;
+use rand::RngExt;
 
 pub fn glider(state: &mut CellData, x: usize, y: usize) {
     let build_list: Vec<(usize, usize)> = vec!(
@@ -24,6 +25,25 @@ pub fn u(state: &mut CellData, x: usize, y: usize) {
     );
     
     build(state, x, y, build_list);
+}
+
+pub fn randomise(state: &mut CellData, probability: u32) {
+    match probability {
+        0..=100 => (),
+        _ => panic!("Probability must be between 0 and 100")
+    }
+
+    let mut rng = rand::rng();
+    let mut random_number: u32;
+
+    for row in state.iter_mut() {
+        for cell in row.iter_mut() {
+            random_number = rng.random_range(0..100);
+            if random_number <= probability {
+                *cell = true;
+            }
+        }
+    }
 }
 
 fn build(state: &mut CellData, x: usize, y: usize, build_list: Vec<(usize, usize)>) {
