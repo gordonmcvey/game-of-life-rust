@@ -72,7 +72,7 @@ impl Game {
         self.previous_states.contains(&self.hash())
     }
 
-    pub fn hash(&self) -> u64 {
+    fn hash(&self) -> u64 {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         self.game_state.hash(&mut hasher);
         hasher.finish()
