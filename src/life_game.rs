@@ -1,4 +1,5 @@
 pub mod builder;
+pub mod render;
 
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
