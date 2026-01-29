@@ -108,19 +108,19 @@ impl CharacterMapRenderer {
         for row_index in 0 .. cells.len() {
             for column_index in 0 .. cells[row_index].len() {
                 let cell_index = (row_index * self.columns_per_symbol) + column_index;
-                let bit_value = usize::pow(2, cell_index as u32);
                 let cell_is_alive = cells[row_index][column_index];
 
+                if *cell_is_alive {
+                    let bit_value = usize::pow(2, cell_index as u32);
+                    result |= bit_value;
+                }
+                
                 // println!(
                 //     "cell {}, bit value {}, alive? {}",
                 //     cell_index,
                 //     bit_value,
                 //     cell_is_alive,
                 // );
-
-                if *cell_is_alive {
-                    result |= bit_value;
-                }
             }
         }
 
