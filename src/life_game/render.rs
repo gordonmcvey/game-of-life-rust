@@ -19,6 +19,14 @@ impl CharacterMapRenderer {
         Self::new(vec![' ', '█'], 1,1, )
     }
 
+    pub fn two_cells_per_char() -> Self {
+        Self::new(
+            vec![' ','▀', '▄', '█'],
+            2,
+            1,
+        )
+    }
+
     pub fn four_cells_per_char() -> Self {
         Self::new(
             vec![
