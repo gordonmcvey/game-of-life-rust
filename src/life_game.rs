@@ -30,13 +30,9 @@ impl Game {
     }
 
     pub fn from_data(cells: CellData) -> Self {
-        Game {
-            width: cells[0].len(),
-            height: cells.len(),
-            iteration: 0,
-            game_state: cells,
-            previous_states: [0; Self::ITERATION_HISTORY],
-        }
+        let mut game = Self::new(cells[0].len(), cells.len());
+        game.game_state = cells;
+        game
     }
 
     pub fn step(&mut self) {
