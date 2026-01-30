@@ -40,6 +40,7 @@ fn prompt_rendering() -> Result<i32, ParseIntError> {
     println!("1: One cell per character  (' ', '█'),           simplest, lowest resolution");
     println!("2: Two cells per character (' ', '▀', '▄', '█'), double horizontal resolution");
     println!("3: 4 cells per character   ('▘', '▚', '▞', '▙'), double horizontal and vertical resolution");
+    println!("4: 8 cells per character   ('⠛', '⠶', '⣤', '⣿'), double horizontal, 4x vertical resolution" );
     println!();
     io::stdin()
         .read_line(&mut input)
@@ -50,21 +51,10 @@ fn prompt_rendering() -> Result<i32, ParseIntError> {
 
 fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, usize, CharacterMapRenderer)> {
     match response {
-        Ok(1) => Some((
-            1,
-            1,
-            CharacterMapRenderer::single_cell_per_char()
-        )),
-        Ok(2) => Some((
-            1,
-            2,
-            CharacterMapRenderer::two_cells_per_char()
-        )),
-        Ok(3) => Some((
-            2,
-            2,
-            CharacterMapRenderer::four_cells_per_char()
-        )),
+        Ok(1) => Some((1, 1, CharacterMapRenderer::single_cell_per_char())),
+        Ok(2) => Some((1, 2, CharacterMapRenderer::two_cells_per_char())),
+        Ok(3) => Some((2, 2, CharacterMapRenderer::four_cells_per_char())),
+        Ok(4) => Some((2, 4, CharacterMapRenderer::eight_cells_per_char())),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             None
