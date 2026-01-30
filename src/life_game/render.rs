@@ -69,7 +69,7 @@ impl CharacterMapRenderer {
             for column in (0 .. game.width).step_by(self.columns_per_symbol) {
                 let char_to_use = self.cells_at(game, column, row);
                 // println!("Character to use for this cell: {}", char_to_use);
-                let cell_output = self.symbol_map[char_to_use];
+                let cell_output = self.symbol_map.get(char_to_use).unwrap_or_else(|| &'?');
                 output.push_str(format!("{}", cell_output).as_str());
             }
             output.push_str("┃\n");
@@ -114,7 +114,7 @@ impl CharacterMapRenderer {
                     let bit_value = usize::pow(2, cell_index as u32);
                     result |= bit_value;
                 }
-                
+
                 // println!(
                 //     "cell {}, bit value {}, alive? {}",
                 //     cell_index,
