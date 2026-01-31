@@ -1,4 +1,4 @@
-use crate::life_game::render::CharacterMapRenderer;
+use crate::life_game::render::{CharacterMapRenderer, Renderer};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -48,7 +48,7 @@ fn prompt_rendering() -> Result<i32, ParseIntError> {
     input.trim().parse::<i32>()
 }
 
-fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, usize, CharacterMapRenderer)> {
+fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, usize, impl Renderer)> {
     match response {
         Ok(1) => Some((1, 1, CharacterMapRenderer::single_cell_per_char())),
         Ok(2) => Some((1, 2, CharacterMapRenderer::two_cells_per_char())),

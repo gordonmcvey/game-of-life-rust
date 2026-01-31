@@ -1,5 +1,9 @@
 use crate::life_game::Game;
 
+pub trait Renderer {
+    fn render(&self, game: &Game) -> String;
+}
+
 pub struct CharacterMapRenderer {
     symbol_map: Vec<char>,
     rows_per_symbol: usize,
@@ -128,39 +132,6 @@ impl CharacterMapRenderer {
         )
     }
 
-    pub fn render(&self, game: &Game) -> String {
-        // Rendering dimensions should be divided by the game grid dimensions but rounded up
-        let render_width = (game.width + self.columns_per_symbol - 1) / self.columns_per_symbol;
-        let render_height = (game.height + self.rows_per_symbol - 1) / self.rows_per_symbol;
-
-        let border = std::iter::repeat("━").take(render_width).collect::<String>();
-
-        // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
-        let mut output = String::with_capacity(
-            ((render_width + 2) * (render_height + 2)) * 4
-        );
-
-        output.push_str("┏");
-        output.push_str(&border);
-        output.push_str("┓\n");
-
-        for row in (0 .. game.height).step_by(self.rows_per_symbol) {
-            output.push_str("┃");
-            for column in (0 .. game.width).step_by(self.columns_per_symbol) {
-                let char_to_use = self.cells_at(game, column, row);
-                let cell_output = self.symbol_map.get(char_to_use).unwrap_or_else(|| &'?');
-                output.push_str(format!("{}", cell_output).as_str());
-            }
-            output.push_str("┃\n");
-        }
-
-        output.push_str("┗");
-        output.push_str(&border);
-        output.push_str("┛\n");
-
-        output
-    }
-
     // @todo This should be 2 methods (one for finding the relevant cells and another to map the live cells to the appropriate symbol)
     // Will take a bit of figuring out some stuff regarding lifetimes and other oddities to get it to actually work like that.
     fn cells_at(&self, game: &Game, x: usize, y: usize) -> usize {
@@ -195,5 +166,40 @@ impl CharacterMapRenderer {
         }
 
         result
+    }
+}
+
+impl Renderer for CharacterMapRenderer {
+    fn render(&self, game: &Game) -> String {
+        // Rendering dimensions should be divided by the game grid dimensions but rounded up
+        let render_width = game.width.div_ceil(self.columns_per_symbol);
+        let render_height = game.height.div_ceil(self.rows_per_symbol);
+
+        let border = std::iter::repeat_n("━", render_width).collect::<String>();
+
+        // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
+        let mut output = String::with_capacity(
+            ((render_width + 2) * (render_height + 2)) * 4
+        );
+
+        output.push('┏');
+        output.push_str(&border);
+        output.push_str("┓\n");
+
+        for row in (0 .. game.height).step_by(self.rows_per_symbol) {
+            output.push('┃');
+            for column in (0 .. game.width).step_by(self.columns_per_symbol) {
+                let char_to_use = self.cells_at(game, column, row);
+                let cell_output = self.symbol_map.get(char_to_use).unwrap_or(&'?');
+                output.push_str(format!("{}", cell_output).as_str());
+            }
+            output.push_str("┃\n");
+        }
+
+        output.push('┗');
+        output.push_str(&border);
+        output.push_str("┛\n");
+
+        output
     }
 }
