@@ -44,7 +44,7 @@ impl Game {
                 let is_alive = self.game_state[row][column];
                 let living_neighbours = self.get_living_neighbour_count(row, column);
 
-                if is_alive && (living_neighbours < 2 || living_neighbours > 3) {
+                if is_alive && !(2..=3).contains(&living_neighbours) {
                     new_state[row][column] = false;
                 } else if !is_alive && living_neighbours == 3 {
                     new_state[row][column] = true;
@@ -95,16 +95,16 @@ impl Game {
 
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let border = std::iter::repeat("━").take(self.width).collect::<String>();
+        let border = std::iter::repeat_n("━", self.width).collect::<String>();
         // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
         let mut output = String::with_capacity(((self.width + 2) * (self.height + 2)) * 4);
 
-        output.push_str("┏");
+        output.push('┏');
         output.push_str(&border);
         output.push_str("┓\n");
 
         for row in self.game_state.iter() {
-            output.push_str("┃");
+            output.push('┃');
             for cell in row.iter() {
                 let cell_output = {
                     if *cell {
@@ -114,12 +114,12 @@ impl Display for Game {
                     }
                 };
 
-                output.push_str(format!("{}", cell_output).as_str());
+                output.push_str(cell_output.to_string().as_str());
             }
             output.push_str("┃\n");
         }
 
-        output.push_str("┗");
+        output.push('┗');
         output.push_str(&border);
         output.push_str("┛\n");
 
