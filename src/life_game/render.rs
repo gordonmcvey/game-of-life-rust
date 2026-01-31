@@ -148,7 +148,6 @@ impl CharacterMapRenderer {
             output.push_str("┃");
             for column in (0 .. game.width).step_by(self.columns_per_symbol) {
                 let char_to_use = self.cells_at(game, column, row);
-                // println!("Character to use for this cell: {}", char_to_use);
                 let cell_output = self.symbol_map.get(char_to_use).unwrap_or_else(|| &'?');
                 output.push_str(format!("{}", cell_output).as_str());
             }
@@ -178,8 +177,6 @@ impl CharacterMapRenderer {
                 )
             .collect();
 
-        // println!("{:?}", cells);
-
         let mut result:usize = 0;
 
         // Determine the vector index value to use for the given block of cell state.  Treat the
@@ -188,19 +185,12 @@ impl CharacterMapRenderer {
         for row_index in 0 .. cells.len() {
             for column_index in 0 .. cells[row_index].len() {
                 let cell_index = (row_index * self.columns_per_symbol) + column_index;
-                let cell_is_alive = cells[row_index][column_index];
+                let cell_is_alive = *cells[row_index][column_index];
 
-                if *cell_is_alive {
+                if cell_is_alive {
                     let bit_value = usize::pow(2, cell_index as u32);
                     result |= bit_value;
                 }
-
-                // println!(
-                //     "cell {}, bit value {}, alive? {}",
-                //     cell_index,
-                //     bit_value,
-                //     cell_is_alive,
-                // );
             }
         }
 

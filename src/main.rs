@@ -1,6 +1,5 @@
 use crate::life_game::render::CharacterMapRenderer;
-use crate::life_game::CellData;
-use crate::life_game::{builder, Game};
+use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
 use std::time::Duration;
@@ -129,7 +128,7 @@ fn space_for_game() -> (usize, usize) {
     match term_size::dimensions() {
         Some(dimensions) => (
             min(dimensions.0, 200),
-            min(dimensions.1, 50),
+            min(dimensions.1, 60),
         ),
         None => (80, 25),
     }

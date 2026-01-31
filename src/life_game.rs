@@ -43,7 +43,6 @@ impl Game {
             for column in 0..self.width {
                 let is_alive = self.game_state[row][column];
                 let living_neighbours = self.get_living_neighbour_count(row, column);
-                // println!("{}, {} has {} live neighbours", row, column, living_neighbours);
 
                 if is_alive && (living_neighbours < 2 || living_neighbours > 3) {
                     new_state[row][column] = false;
