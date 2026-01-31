@@ -17,7 +17,7 @@ fn main() {
     ) = configure_rendering(prompt_rendering()).unwrap_or_else(|| process::exit(1));
 
     let game_width = (display_width - 2) * game_width_multiplier;
-    let game_height = (display_height - 2) * game_height_multiplier;
+    let game_height = (display_height - 3) * game_height_multiplier;
 
     let starting_state: CellData = configure_game(prompt_game(), game_width, game_height).unwrap_or_else(|| process::exit(1));
     let mut game = Game::from_data(starting_state);
