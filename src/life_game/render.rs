@@ -191,7 +191,7 @@ impl Renderer for CharacterMapRenderer {
             for column in (0 .. game.width).step_by(self.columns_per_symbol) {
                 let char_to_use = self.cells_at(game, column, row);
                 let cell_output = self.symbol_map.get(char_to_use).unwrap_or(&'?');
-                output.push_str(format!("{}", cell_output).as_str());
+                output.push(*cell_output);
             }
             output.push_str("┃\n");
         }
