@@ -1,4 +1,4 @@
-use crate::life_game::Game;
+use crate::life_game::{CellData, Game};
 
 pub trait Renderer {
     fn render(&self, game: &Game) -> String;
@@ -132,31 +132,32 @@ impl CharacterMapRenderer {
         )
     }
 
-    // @todo This should be 2 methods (one for finding the relevant cells and another to map the live cells to the appropriate symbol)
-    // Will take a bit of figuring out some stuff regarding lifetimes and other oddities to get it to actually work like that.
-    fn cells_at(&self, game: &Game, x: usize, y: usize) -> usize {
-        // Get a group of cells starting at the x-y coordinates given
-        let cells: Vec<Vec<&bool>> = game.game_state.iter()
+    fn get_cell_chunk_at(&self, game: &Game, x: usize, y: usize) -> CellData {
+        // get a chunk of cells from the game state at the given co-ordinates.  The chunk will be a
+        // group of cells that can be mapped onto a display character (eg if one character can
+        // represent a group of 2x4 cells, then take 8 cells total, as two columns of 4 rows each
+        game.game_state.iter()
             .skip(y)
             .take(self.rows_per_symbol)
-            .map(
-                |row|
+            .map(|row|
                     row.iter()
-                    .skip(x)
-                    .take(self.columns_per_symbol)
-                    .collect()
-                )
-            .collect();
+                        .skip(x)
+                        .take(self.columns_per_symbol)
+                        .copied()  // Dereference the bool reference
+                        .collect::<Vec<bool>>())
+            .collect()
+    }
 
+    fn map_chunk_to_character_index(&self, cells: &CellData) -> usize {
+        // Work out the character index that this chunk of cells will map to.  We treat the chunk
+        // as a group of bits, starting with the LSB in the top-left, then working right and down
+        // until we get to the MSB in the bottom-right of the chunk.
         let mut result:usize = 0;
 
-        // Determine the vector index value to use for the given block of cell state.  Treat the
-        // top left cell as the LSB, then work right across the columns and down across the rows and
-        // add the relevant bit value to the output
         for row_index in 0 .. cells.len() {
             for column_index in 0 .. cells[row_index].len() {
                 let cell_index = (row_index * self.columns_per_symbol) + column_index;
-                let cell_is_alive = *cells[row_index][column_index];
+                let cell_is_alive = cells[row_index][column_index];
 
                 if cell_is_alive {
                     let bit_value = usize::pow(2, cell_index as u32);
@@ -189,7 +190,9 @@ impl Renderer for CharacterMapRenderer {
         for row in (0 .. game.height).step_by(self.rows_per_symbol) {
             output.push('┃');
             for column in (0 .. game.width).step_by(self.columns_per_symbol) {
-                let char_to_use = self.cells_at(game, column, row);
+                let char_to_use = self.map_chunk_to_character_index(
+                    &self.get_cell_chunk_at(game, column, row)
+                );
                 let cell_output = self.symbol_map.get(char_to_use).unwrap_or(&'?');
                 output.push(*cell_output);
             }
