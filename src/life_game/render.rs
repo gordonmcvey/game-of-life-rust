@@ -1,4 +1,4 @@
-use crate::life_game::{CellData, Game};
+use crate::life_game::{CellData, Coordinates, Dimensions, Game};
 
 pub trait Renderer {
     fn render(&self, game: &Game) -> String;
@@ -157,8 +157,10 @@ impl CharacterMapRenderer {
 impl Renderer for CharacterMapRenderer {
     fn render(&self, game: &Game) -> String {
         // Rendering dimensions should be divided by the game grid dimensions but rounded up
-        let render_width = game.width.div_ceil(self.columns_per_symbol);
-        let render_height = game.height.div_ceil(self.rows_per_symbol);
+        let render_width = game.dimensions.width.div_ceil(self.columns_per_symbol);
+        let render_height = game.dimensions.height.div_ceil(self.rows_per_symbol);
+        let cell_chunk_dimensions = Dimensions { width: self.columns_per_symbol, height: self.rows_per_symbol };
+        let mut coordinates = Coordinates { x: 0, y: 0 };
 
         let border = std::iter::repeat_n("━", render_width).collect::<String>();
 
@@ -171,14 +173,15 @@ impl Renderer for CharacterMapRenderer {
         output.push_str(&border);
         output.push_str("┓\n");
 
-        for row in (0 .. game.height).step_by(self.rows_per_symbol) {
+        for row in (0 .. game.dimensions.height).step_by(self.rows_per_symbol) {
             output.push('┃');
-            for column in (0 .. game.width).step_by(self.columns_per_symbol) {
+            for column in (0 .. game.dimensions.width).step_by(self.columns_per_symbol) {
+                coordinates.x = column;
+                coordinates.y = row;
                 let char_to_use = self.map_chunk_to_character_index(
-                    &game.get_cell_chunk_at(column, row, self.columns_per_symbol, self.rows_per_symbol)
+                    &game.get_cell_chunk_at(&coordinates, &cell_chunk_dimensions)
                 );
-                let cell_output = self.symbol_map.get(char_to_use).unwrap_or(&'?');
-                output.push(*cell_output);
+                output.push(*self.symbol_map.get(char_to_use).unwrap_or(&'?'));
             }
             output.push_str("┃\n");
         }

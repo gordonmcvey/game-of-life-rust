@@ -9,9 +9,18 @@ use std::hash::{Hash, Hasher};
 /// (so its index is the X axis coordinate).
 pub type CellData = Vec<Vec<bool>>;
 
+pub struct Dimensions {
+    pub width: usize,
+    pub height: usize,
+}
+
+pub struct Coordinates {
+    pub x: usize,
+    pub y: usize,
+}
+
 pub struct Game {
-    width: usize,
-    height: usize,
+    dimensions: Dimensions,
     iteration: usize,
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
@@ -20,10 +29,11 @@ pub struct Game {
 impl Game {
     const ITERATION_HISTORY: usize = 32;
 
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(dimensions: Dimensions) -> Self {
+        let width = dimensions.width;
+        let height = dimensions.height;
         Game {
-            width,
-            height,
+            dimensions,
             iteration: 0,
             game_state: vec![vec![false; width]; height],
             previous_states: [0; Self::ITERATION_HISTORY],
@@ -31,16 +41,19 @@ impl Game {
     }
 
     pub fn from_data(cells: CellData) -> Self {
-        let mut game = Self::new(cells[0].len(), cells.len());
+        let mut game = Self::new(Dimensions {
+            width: cells[0].len(), 
+            height: cells.len(),
+        });
         game.game_state = cells;
         game
     }
 
     pub fn step(&mut self) {
-        let mut new_state = vec![vec![false; self.width]; self.height];
+        let mut new_state = vec![vec![false; self.dimensions.width]; self.dimensions.height];
 
-        for row in 0..self.height {
-            for column in 0..self.width {
+        for row in 0..self.dimensions.height {
+            for column in 0..self.dimensions.width {
                 let is_alive = self.game_state[row][column];
                 let living_neighbours = self.get_living_neighbour_count(row, column);
 
@@ -68,17 +81,17 @@ impl Game {
         self.previous_states.contains(&self.hash())
     }
 
-    pub fn get_cell_chunk_at(&self, x: usize, y: usize, width: usize, height: usize) -> CellData {
+    pub fn get_cell_chunk_at(&self, coordinates: &Coordinates, dimensions: &Dimensions) -> CellData {
         // get a chunk of cells from the game state at the given co-ordinates.  The chunk will be a
         // group of cells that can be mapped onto a display character (eg if one character can
         // represent a group of 2x4 cells, then take 8 cells total, as two columns of 4 rows each
         self.game_state.iter()
-            .skip(y)
-            .take(height)
+            .skip(coordinates.y)
+            .take(dimensions.height)
             .map(|row|
                 row.iter()
-                    .skip(x)
-                    .take(width)
+                    .skip(coordinates.x)
+                    .take(dimensions.width)
                     .copied()  // Dereference the bool reference
                     .collect::<Vec<bool>>())
             .collect()
@@ -91,10 +104,10 @@ impl Game {
     }
 
     fn get_living_neighbour_count(&self, row: usize, column: usize) -> u8 {
-        let above = (row + self.height - 1) % self.height;
-        let below = (row + 1) % self.height;
-        let left = (column + self.width - 1) % self.width;
-        let right = (column + 1) % self.width;
+        let above = (row + self.dimensions.height - 1) % self.dimensions.height;
+        let below = (row + 1) % self.dimensions.height;
+        let left = (column + self.dimensions.width - 1) % self.dimensions.width;
+        let right = (column + 1) % self.dimensions.width;
 
         let count = if self.game_state[above][left] { 1 } else { 0 }
             + if self.game_state[above][column] { 1 } else { 0 }
@@ -111,9 +124,9 @@ impl Game {
 
 impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let border = std::iter::repeat_n("━", self.width).collect::<String>();
+        let border = std::iter::repeat_n("━", self.dimensions.width).collect::<String>();
         // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
-        let mut output = String::with_capacity(((self.width + 2) * (self.height + 2)) * 4);
+        let mut output = String::with_capacity(((self.dimensions.width + 2) * (self.dimensions.height + 2)) * 4);
 
         output.push('┏');
         output.push_str(&border);
