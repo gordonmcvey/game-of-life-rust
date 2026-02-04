@@ -152,26 +152,10 @@ impl CharacterMapRenderer {
 
         result
     }
-}
 
-impl Renderer for CharacterMapRenderer {
-    fn render(&self, game: &Game) -> String {
-        // Rendering dimensions should be divided by the game grid dimensions but rounded up
-        let render_width = game.dimensions.width.div_ceil(self.columns_per_symbol);
-        let render_height = game.dimensions.height.div_ceil(self.rows_per_symbol);
+    fn render_cells(&self, game: &Game, output: &mut String) {
         let cell_chunk_dimensions = Dimensions { width: self.columns_per_symbol, height: self.rows_per_symbol };
         let mut coordinates = Coordinates { x: 0, y: 0 };
-
-        let border = std::iter::repeat_n("━", render_width).collect::<String>();
-
-        // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
-        let mut output = String::with_capacity(
-            ((render_width + 2) * (render_height + 2)) * 4
-        );
-
-        output.push('┏');
-        output.push_str(&border);
-        output.push_str("┓\n");
 
         for row in (0 .. game.dimensions.height).step_by(self.rows_per_symbol) {
             output.push('┃');
@@ -185,6 +169,27 @@ impl Renderer for CharacterMapRenderer {
             }
             output.push_str("┃\n");
         }
+    }
+}
+
+impl Renderer for CharacterMapRenderer {
+    fn render(&self, game: &Game) -> String {
+        // Rendering dimensions should be divided by the game grid dimensions but rounded up
+        let render_width = game.dimensions.width.div_ceil(self.columns_per_symbol);
+        let render_height = game.dimensions.height.div_ceil(self.rows_per_symbol);
+
+        let border = std::iter::repeat_n("━", render_width).collect::<String>();
+
+        // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
+        let mut output = String::with_capacity(
+            ((render_width + 2) * (render_height + 2)) * 4
+        );
+
+        output.push('┏');
+        output.push_str(&border);
+        output.push_str("┓\n");
+
+        self.render_cells(game, &mut output);
 
         output.push('┗');
         output.push_str(&border);
