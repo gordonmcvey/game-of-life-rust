@@ -68,6 +68,22 @@ impl Game {
         self.previous_states.contains(&self.hash())
     }
 
+    pub fn get_cell_chunk_at(&self, x: usize, y: usize, width: usize, height: usize) -> CellData {
+        // get a chunk of cells from the game state at the given co-ordinates.  The chunk will be a
+        // group of cells that can be mapped onto a display character (eg if one character can
+        // represent a group of 2x4 cells, then take 8 cells total, as two columns of 4 rows each
+        self.game_state.iter()
+            .skip(y)
+            .take(height)
+            .map(|row|
+                row.iter()
+                    .skip(x)
+                    .take(width)
+                    .copied()  // Dereference the bool reference
+                    .collect::<Vec<bool>>())
+            .collect()
+    }
+
     fn hash(&self) -> u64 {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         self.game_state.hash(&mut hasher);

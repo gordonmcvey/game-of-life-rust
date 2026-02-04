@@ -132,22 +132,6 @@ impl CharacterMapRenderer {
         )
     }
 
-    fn get_cell_chunk_at(&self, game: &Game, x: usize, y: usize) -> CellData {
-        // get a chunk of cells from the game state at the given co-ordinates.  The chunk will be a
-        // group of cells that can be mapped onto a display character (eg if one character can
-        // represent a group of 2x4 cells, then take 8 cells total, as two columns of 4 rows each
-        game.game_state.iter()
-            .skip(y)
-            .take(self.rows_per_symbol)
-            .map(|row|
-                    row.iter()
-                        .skip(x)
-                        .take(self.columns_per_symbol)
-                        .copied()  // Dereference the bool reference
-                        .collect::<Vec<bool>>())
-            .collect()
-    }
-
     fn map_chunk_to_character_index(&self, cells: &CellData) -> usize {
         // Work out the character index that this chunk of cells will map to.  We treat the chunk
         // as a group of bits, starting with the LSB in the top-left, then working right and down
@@ -191,7 +175,7 @@ impl Renderer for CharacterMapRenderer {
             output.push('┃');
             for column in (0 .. game.width).step_by(self.columns_per_symbol) {
                 let char_to_use = self.map_chunk_to_character_index(
-                    &self.get_cell_chunk_at(game, column, row)
+                    &game.get_cell_chunk_at(column, row, self.columns_per_symbol, self.rows_per_symbol)
                 );
                 let cell_output = self.symbol_map.get(char_to_use).unwrap_or(&'?');
                 output.push(*cell_output);
