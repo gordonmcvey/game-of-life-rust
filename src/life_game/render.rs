@@ -138,17 +138,15 @@ impl CharacterMapRenderer {
         // until we get to the MSB in the bottom-right of the chunk.
         let mut result:usize = 0;
 
-        for row_index in 0 .. cells.len() {
-            for column_index in 0 .. cells[row_index].len() {
-                let cell_index = (row_index * self.columns_per_symbol) + column_index;
-                let cell_is_alive = cells[row_index][column_index];
-
-                if cell_is_alive {
+        cells.iter().enumerate().for_each( |(row_index, row)| {
+            row.iter().enumerate().for_each( |(column_index, cell)| {
+                if *cell {
+                    let cell_index = (row_index * self.columns_per_symbol) + column_index;
                     let bit_value = usize::pow(2, cell_index as u32);
                     result |= bit_value;
                 }
-            }
-        }
+            })
+        });
 
         result
     }
