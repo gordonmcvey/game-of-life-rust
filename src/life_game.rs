@@ -155,3 +155,76 @@ impl Display for Game {
         write!(f, "{}", output)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Game;
+
+    // Check that a glider evolves as expected for a game of life
+    #[test]
+    fn it_handles_a_glider_evolution() {
+        let grid = vec![
+            vec![false, true, false, false, false, false],
+            vec![false, false, true, false, false, false],
+            vec![true, true, true, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ];
+
+        let mut game = Game::from_data(grid);
+        // println!("{}", game);
+        assert_eq!(vec![
+            vec![false, true, false, false, false, false],
+            vec![false, false, true, false, false, false],
+            vec![true, true, true, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ], game.game_state);
+
+        game.step();
+        // println!("{}", game);
+        assert_eq!(vec![
+            vec![false, false, false, false, false, false],
+            vec![true, false, true, false, false, false],
+            vec![false, true, true, false, false, false],
+            vec![false, true, false, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ], game.game_state);
+
+        game.step();
+        // println!("{}", game);
+        assert_eq!(vec![
+            vec![false, false, false, false, false, false],
+            vec![false, false, true, false, false, false],
+            vec![true, false, true, false, false, false],
+            vec![false, true, true, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ], game.game_state);
+
+        game.step();
+        // println!("{}", game);
+        assert_eq!(vec![
+            vec![false, false, false, false, false, false],
+            vec![false, true, false, false, false, false],
+            vec![false, false, true, true, false, false],
+            vec![false, true, true, false, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ], game.game_state);
+
+        game.step();
+        // println!("{}", game);
+        assert_eq!(vec![
+            vec![false, false, false, false, false, false],
+            vec![false, false, true, false, false, false],
+            vec![false, false, false, true, false, false],
+            vec![false, true, true, true, false, false],
+            vec![false, false, false, false, false, false],
+            vec![false, false, false, false, false, false],
+        ], game.game_state);
+    }
+}
