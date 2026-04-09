@@ -158,12 +158,47 @@ impl Display for Game {
 
 #[cfg(test)]
 mod tests {
-    use super::Game;
+    use super::{CellData, Dimensions, Game};
+
+    #[test]
+    fn it_counts_iterations() {
+        let mut game = Game::new(Dimensions { width: 10, height: 10 });
+        assert_eq!(0, game.iteration());
+
+        for _ in 0..100 {
+            game.step();
+        }
+
+        assert_eq!(100, game.iteration());
+    }
+
+    #[test]
+    fn it_detects_stability() {
+        let grid: CellData = vec![
+            vec![false, false, false, false, false, false, false],
+            vec![false, false, false, false, false, false, false],
+            vec![false, false, false, true, false, false, false],
+            vec![false, false, false, true, false, false, false],
+            vec![false, false, false, true, false, false, false],
+            vec![false, false, false, false, false, false, false],
+            vec![false, false, false, false, false, false, false],
+        ];
+        let mut game = Game::from_data(grid);
+
+        // We're dealing with a blinker with a period of 2, so iterations 0 and 1 should not be
+        // considered stable, but iteration 2 is a repeat of iteration 0, so we can consider the
+        // game stable even if it won't become a still-life.
+        assert!(!game.has_stabilised());
+        game.step();
+        assert!(!game.has_stabilised());
+        game.step();
+        assert!(game.has_stabilised());
+    }
 
     // Check that a glider evolves as expected for a game of life
     #[test]
     fn it_handles_a_glider_evolution() {
-        let grid = vec![
+        let grid: CellData = vec![
             vec![false, true, false, false, false, false],
             vec![false, false, true, false, false, false],
             vec![true, true, true, false, false, false],
@@ -173,7 +208,6 @@ mod tests {
         ];
 
         let mut game = Game::from_data(grid);
-        // println!("{}", game);
         assert_eq!(vec![
             vec![false, true, false, false, false, false],
             vec![false, false, true, false, false, false],
@@ -184,7 +218,6 @@ mod tests {
         ], game.game_state);
 
         game.step();
-        // println!("{}", game);
         assert_eq!(vec![
             vec![false, false, false, false, false, false],
             vec![true, false, true, false, false, false],
@@ -195,7 +228,6 @@ mod tests {
         ], game.game_state);
 
         game.step();
-        // println!("{}", game);
         assert_eq!(vec![
             vec![false, false, false, false, false, false],
             vec![false, false, true, false, false, false],
@@ -206,7 +238,6 @@ mod tests {
         ], game.game_state);
 
         game.step();
-        // println!("{}", game);
         assert_eq!(vec![
             vec![false, false, false, false, false, false],
             vec![false, true, false, false, false, false],
@@ -217,7 +248,6 @@ mod tests {
         ], game.game_state);
 
         game.step();
-        // println!("{}", game);
         assert_eq!(vec![
             vec![false, false, false, false, false, false],
             vec![false, false, true, false, false, false],
