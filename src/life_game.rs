@@ -158,18 +158,25 @@ impl Display for Game {
 
 #[cfg(test)]
 mod tests {
-    use super::{CellData, Dimensions, Game};
+    use super::{CellData, Coordinates, Dimensions, Game};
 
     #[test]
     fn it_counts_iterations() {
+        let expected = 100;
         let mut game = Game::new(Dimensions { width: 10, height: 10 });
         assert_eq!(0, game.iteration());
 
-        for _ in 0..100 {
+        for _ in 0..expected {
             game.step();
         }
 
-        assert_eq!(100, game.iteration());
+        assert_eq!(
+            expected,
+            game.iteration(),
+            "Game should have counted {} iterations, actually counted {}",
+            expected,
+            game.iteration(),
+        );
     }
 
     #[test]
@@ -188,17 +195,88 @@ mod tests {
         // We're dealing with a blinker with a period of 2, so iterations 0 and 1 should not be
         // considered stable, but iteration 2 is a repeat of iteration 0, so we can consider the
         // game stable even if it won't become a still-life.
-        assert!(!game.has_stabilised());
+        assert!(!game.has_stabilised(), "Game should not be stable at iteration 0");
         game.step();
-        assert!(!game.has_stabilised());
+        assert!(!game.has_stabilised(), "Game should not be stable at iteration 1");
         game.step();
-        assert!(game.has_stabilised());
+        assert!(game.has_stabilised(), "Game should be stable at iteration 2");
+    }
+
+    #[test]
+    fn it_returns_chunk_of_game_state() {
+        let game = Game::from_data(vec![
+            vec![false, false, false, false],
+            vec![false, false, false, true],
+            vec![false, false, true, false],
+            vec![false, false, true, true],
+            vec![false, true, false, false],
+            vec![false, true, false, true],
+            vec![false, true, true, false],
+            vec![false, true, true, true],
+            vec![true, false, false, false],
+            vec![true, false, false, true],
+            vec![true, false, true, false],
+            vec![true, false, true, true],
+            vec![true, true, false, false],
+            vec![true, true, false, true],
+            vec![true, true, true, false],
+            vec![true, true, true, true],
+        ]);
+
+        assert_eq!(
+            vec![
+                vec![false],
+            ],
+            game.get_cell_chunk_at(
+                &Coordinates { x: 0, y: 0 },
+                &Dimensions { width: 1, height: 1 }
+            ),
+            "Returned chunk doesn't match expected chunk value",
+        );
+
+        assert_eq!(
+            vec![
+                vec![false, true, true, false],
+                vec![false, true, true, true],
+                vec![true, false, false, false],
+                vec![true, false, false, true],
+            ],
+            game.get_cell_chunk_at(
+                &Coordinates { x: 0, y: 6 },
+                &Dimensions { width: 4, height: 4 }
+            ),
+            "Returned chunk doesn't match expected chunk value",
+        );
+
+        assert_eq!(
+            vec![
+                vec![true, false, true],
+                vec![true, true, false],
+                vec![true, true, true],
+            ],
+            game.get_cell_chunk_at(
+                &Coordinates { x: 1, y: 13 },
+                &Dimensions { width: 4, height: 4 }
+            ),
+            "Returned chunk doesn't match expected chunk value",
+        );
+
+        assert_eq!(
+            vec![
+                vec![true],
+            ],
+            game.get_cell_chunk_at(
+                &Coordinates { x: 3, y: 15 },
+                &Dimensions { width: 4, height: 4 }
+            ),
+            "Returned chunk doesn't match expected chunk value",
+        );
     }
 
     // Check that a glider evolves as expected for a game of life
     #[test]
     fn it_handles_a_glider_evolution() {
-        let grid: CellData = vec![
+        let start_state: CellData = vec![
             vec![false, true, false, false, false, false],
             vec![false, false, true, false, false, false],
             vec![true, true, true, false, false, false],
@@ -207,54 +285,74 @@ mod tests {
             vec![false, false, false, false, false, false],
         ];
 
-        let mut game = Game::from_data(grid);
-        assert_eq!(vec![
-            vec![false, true, false, false, false, false],
-            vec![false, false, true, false, false, false],
-            vec![true, true, true, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ], game.game_state);
+        let mut game = Game::from_data(start_state);
+        assert_eq!(
+            vec![
+                vec![false, true, false, false, false, false],
+                vec![false, false, true, false, false, false],
+                vec![true, true, true, false, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+            ],
+            game.game_state,
+            "State is not the specified start state",
+        );
 
         game.step();
-        assert_eq!(vec![
-            vec![false, false, false, false, false, false],
-            vec![true, false, true, false, false, false],
-            vec![false, true, true, false, false, false],
-            vec![false, true, false, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ], game.game_state);
+        assert_eq!(
+            vec![
+                vec![false, false, false, false, false, false],
+                vec![true, false, true, false, false, false],
+                vec![false, true, true, false, false, false],
+                vec![false, true, false, false, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+            ],
+            game.game_state,
+            "State no longer resembles a glider after one iteration",
+        );
 
         game.step();
-        assert_eq!(vec![
-            vec![false, false, false, false, false, false],
-            vec![false, false, true, false, false, false],
-            vec![true, false, true, false, false, false],
-            vec![false, true, true, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ], game.game_state);
+        assert_eq!(
+            vec![
+                vec![false, false, false, false, false, false],
+                vec![false, false, true, false, false, false],
+                vec![true, false, true, false, false, false],
+                vec![false, true, true, false, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+            ],
+            game.game_state,
+            "State no longer resembles a glider after two iterations",
+        );
 
         game.step();
-        assert_eq!(vec![
-            vec![false, false, false, false, false, false],
-            vec![false, true, false, false, false, false],
-            vec![false, false, true, true, false, false],
-            vec![false, true, true, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ], game.game_state);
+        assert_eq!(
+            vec![
+                vec![false, false, false, false, false, false],
+                vec![false, true, false, false, false, false],
+                vec![false, false, true, true, false, false],
+                vec![false, true, true, false, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+            ],
+            game.game_state,
+            "State no longer resembles a glider after three iterations",
+        );
 
         game.step();
-        assert_eq!(vec![
-            vec![false, false, false, false, false, false],
-            vec![false, false, true, false, false, false],
-            vec![false, false, false, true, false, false],
-            vec![false, true, true, true, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ], game.game_state);
+        assert_eq!(
+            vec![
+                vec![false, false, false, false, false, false],
+                vec![false, false, true, false, false, false],
+                vec![false, false, false, true, false, false],
+                vec![false, true, true, true, false, false],
+                vec![false, false, false, false, false, false],
+                vec![false, false, false, false, false, false],
+            ],
+            game.game_state,
+            "State no longer resembles a glider after four iterations",
+        );
     }
 }
