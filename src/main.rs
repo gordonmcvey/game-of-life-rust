@@ -2,12 +2,20 @@ use crate::life_game::render::{CharacterMapRenderer, Renderer};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{io, process, thread};
 
 mod life_game;
 
 fn main() {
+    match prompt_mode() {
+        Ok(1) => play_game(),
+        Ok(2) => run_benchmark(),
+        _ => process::exit(1),
+    }
+}
+
+fn play_game() {
     let (display_width, display_height) = space_for_game();
 
     let (
@@ -30,6 +38,54 @@ fn main() {
     }
 
     println!("Game over!  State stabilised after {} iterations", game.iteration());
+}
+
+fn run_benchmark() {
+    // This is the size I get when I use the highest resolution in my terminal when it's full-screen
+    // I'm not displaying anything for benchmarking, but will emulate that size for the run
+    let game_width = 358;
+    let game_height = 200;
+
+    let starting_state: CellData = configure_game(Ok(6), game_width, game_height).unwrap_or_else(|| process::exit(1));
+    let mut game = Game::from_data(starting_state);
+
+    let start = Instant::now();
+    let mut this_iter: usize = 0;
+
+    while this_iter < 100000 {
+        game.step();
+        this_iter = game.iteration();
+        if this_iter.is_multiple_of(75) {
+            eprint!(".");
+        }
+        if this_iter.is_multiple_of(80 * 75) {
+            println!();
+        }
+    }
+
+    println!();
+
+    let duration = start.elapsed();
+    println!(
+        "Benchmark complete.  {} iterations in {:.3} s, {:.3} iterations per second",
+        game.iteration(),
+        duration.as_secs_f64(),
+        game.iteration() as f64 / duration.as_secs_f64(),
+    );
+}
+
+fn prompt_mode() -> Result<i32, ParseIntError> {
+    let mut input = String::new();
+    println!("Select mode:");
+    println!("1: Play game");
+    println!("2: Run benchmark");
+    println!();
+
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+
+    input.trim().parse::<i32>()
 }
 
 fn prompt_rendering() -> Result<i32, ParseIntError> {
