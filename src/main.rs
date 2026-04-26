@@ -1,4 +1,4 @@
-use crate::life_game::render::{CharacterMapRenderer, Renderer};
+use crate::life_game::render::{CharacterMapRenderer, RenderCfg, Renderer};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -21,9 +21,10 @@ fn play_game() {
     let (
         game_width_multiplier,
         game_height_multiplier,
-        renderer
+        renderer_cfg
     ) = configure_rendering(prompt_rendering()).unwrap_or_else(|| process::exit(1));
 
+    let renderer = CharacterMapRenderer::new(renderer_cfg);
     let game_width = (display_width - 2) * game_width_multiplier;
     let game_height = (display_height - 3) * game_height_multiplier;
 
@@ -104,12 +105,12 @@ fn prompt_rendering() -> Result<i32, ParseIntError> {
     input.trim().parse::<i32>()
 }
 
-fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, usize, impl Renderer)> {
+fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, usize, RenderCfg)> {
     match response {
-        Ok(1) => Some((1, 1, CharacterMapRenderer::single_cell_per_char())),
-        Ok(2) => Some((1, 2, CharacterMapRenderer::two_cells_per_char())),
-        Ok(3) => Some((2, 2, CharacterMapRenderer::four_cells_per_char())),
-        Ok(4) => Some((2, 4, CharacterMapRenderer::eight_cells_per_char())),
+        Ok(1) => Some((1, 1, RenderCfg::single_cell_per_char())),
+        Ok(2) => Some((1, 2, RenderCfg::two_cells_per_char())),
+        Ok(3) => Some((2, 2, RenderCfg::four_cells_per_char())),
+        Ok(4) => Some((2, 4, RenderCfg::eight_cells_per_char())),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             None
