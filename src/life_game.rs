@@ -1,8 +1,8 @@
 pub mod builder;
 pub mod render;
-mod state_computer;
+mod solver;
 
-use crate::life_game::state_computer::{SingleThreadedStateComputer, StateComputer};
+use crate::life_game::solver::{SingleThreadedSolver, Solver};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
@@ -27,7 +27,7 @@ pub struct Game {
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
     // @todo Make this a dynamic dispatchable trait, so that we can swap out the state computer
-    state_computer: SingleThreadedStateComputer
+    state_computer: SingleThreadedSolver
 }
 
 impl Game {
@@ -41,7 +41,7 @@ impl Game {
             iteration: 0,
             game_state: vec![vec![false; width]; height],
             previous_states: [0; Self::ITERATION_HISTORY],
-            state_computer: SingleThreadedStateComputer
+            state_computer: SingleThreadedSolver
         }
     }
 
