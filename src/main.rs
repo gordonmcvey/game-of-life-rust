@@ -1,4 +1,5 @@
 use crate::life_game::render::{CharacterMapRenderer, RenderCfg, Renderer};
+use crate::life_game::solver::SingleThreadedSolver;
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -29,7 +30,7 @@ fn play_game() {
     let game_height = (display_height - 3) * game_height_multiplier;
 
     let starting_state: CellData = configure_game(prompt_game(), game_width, game_height).unwrap_or_else(|| process::exit(1));
-    let mut game = Game::from_data(starting_state);
+    let mut game = Game::from_data(starting_state, Box::from(SingleThreadedSolver));
 
     while !game.has_stabilised() {
         print!("\x1B[2J\x1B[1;1H");
@@ -48,7 +49,7 @@ fn run_benchmark() {
     let game_height = 200;
 
     let starting_state: CellData = configure_game(Ok(6), game_width, game_height).unwrap_or_else(|| process::exit(1));
-    let mut game = Game::from_data(starting_state);
+    let mut game = Game::from_data(starting_state, Box::from(SingleThreadedSolver));
 
     let start = Instant::now();
     let mut this_iter: usize = 0;

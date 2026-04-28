@@ -1,8 +1,8 @@
 pub mod builder;
 pub mod render;
-mod solver;
+pub(crate) mod solver;
 
-use crate::life_game::solver::{SingleThreadedSolver, Solver};
+use crate::life_game::solver::Solver;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
@@ -26,14 +26,13 @@ pub struct Game {
     iteration: usize,
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
-    // @todo Make this a dynamic dispatchable trait, so that we can swap out the state computer
-    state_computer: SingleThreadedSolver
+    solver: Box<dyn Solver>
 }
 
 impl Game {
     const ITERATION_HISTORY: usize = 32;
 
-    pub fn new(dimensions: Dimensions) -> Self {
+    pub fn new(dimensions: Dimensions, solver: Box<dyn Solver>) -> Self {
         let width = dimensions.width;
         let height = dimensions.height;
         Game {
@@ -41,21 +40,24 @@ impl Game {
             iteration: 0,
             game_state: vec![vec![false; width]; height],
             previous_states: [0; Self::ITERATION_HISTORY],
-            state_computer: SingleThreadedSolver
+            solver
         }
     }
 
-    pub fn from_data(cells: CellData) -> Self {
-        let mut game = Self::new(Dimensions {
-            width: cells[0].len(), 
-            height: cells.len(),
-        });
+    pub fn from_data(cells: CellData, solver: Box<dyn Solver>) -> Self {
+        let mut game = Self::new(
+            Dimensions {
+                width: cells[0].len(),
+                height: cells.len(),
+            },
+            solver,
+        );
         game.game_state = cells;
         game
     }
 
     pub fn step(&mut self) {
-        let new_state = self.state_computer.compute_state(self);
+        let new_state = self.solver.compute_state(self);
 
         self.previous_states[self.iteration % Self::ITERATION_HISTORY] = self.hash();
         self.iteration += 1;
@@ -131,11 +133,13 @@ impl Display for Game {
 #[cfg(test)]
 mod tests {
     use super::{CellData, Coordinates, Dimensions, Game};
+    use crate::life_game::solver::SingleThreadedSolver;
 
     #[test]
     fn it_counts_iterations() {
         let expected = 100;
-        let mut game = Game::new(Dimensions { width: 10, height: 10 });
+        // @todo The solver should be a mock
+        let mut game = Game::new(Dimensions { width: 10, height: 10 }, Box::from(SingleThreadedSolver));
         assert_eq!(0, game.iteration());
 
         for _ in 0..expected {
@@ -162,7 +166,8 @@ mod tests {
             vec![false, false, false, false, false, false, false],
             vec![false, false, false, false, false, false, false],
         ];
-        let mut game = Game::from_data(grid);
+        // @todo The solver should be a mock
+        let mut game = Game::from_data(grid, Box::from(SingleThreadedSolver));
 
         // We're dealing with a blinker with a period of 2, so iterations 0 and 1 should not be
         // considered stable, but iteration 2 is a repeat of iteration 0, so we can consider the
@@ -176,24 +181,28 @@ mod tests {
 
     #[test]
     fn it_returns_chunk_of_game_state() {
-        let game = Game::from_data(vec![
-            vec![false, false, false, false],
-            vec![false, false, false, true],
-            vec![false, false, true, false],
-            vec![false, false, true, true],
-            vec![false, true, false, false],
-            vec![false, true, false, true],
-            vec![false, true, true, false],
-            vec![false, true, true, true],
-            vec![true, false, false, false],
-            vec![true, false, false, true],
-            vec![true, false, true, false],
-            vec![true, false, true, true],
-            vec![true, true, false, false],
-            vec![true, true, false, true],
-            vec![true, true, true, false],
-            vec![true, true, true, true],
-        ]);
+        // @todo The solver should be a mock
+        let game = Game::from_data(
+            vec![
+                vec![false, false, false, false],
+                vec![false, false, false, true],
+                vec![false, false, true, false],
+                vec![false, false, true, true],
+                vec![false, true, false, false],
+                vec![false, true, false, true],
+                vec![false, true, true, false],
+                vec![false, true, true, true],
+                vec![true, false, false, false],
+                vec![true, false, false, true],
+                vec![true, false, true, false],
+                vec![true, false, true, true],
+                vec![true, true, false, false],
+                vec![true, true, false, true],
+                vec![true, true, true, false],
+                vec![true, true, true, true],
+            ],
+            Box::from(SingleThreadedSolver),
+        );
 
         assert_eq!(
             vec![
@@ -257,7 +266,8 @@ mod tests {
             vec![false, false, false, false, false, false],
         ];
 
-        let mut game = Game::from_data(start_state);
+        // @todo The solver should be a mock
+        let mut game = Game::from_data(start_state, Box::from(SingleThreadedSolver));
         assert_eq!(
             vec![
                 vec![false, true, false, false, false, false],
