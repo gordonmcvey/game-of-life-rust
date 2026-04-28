@@ -21,6 +21,16 @@ pub(crate) trait Solver {
             + if game_state[below][column] { 1 } else { 0 }
             + if game_state[below][right] { 1 } else { 0 })
     }
+
+    fn decide_state(is_alive: bool, living_neighbours: u8) -> bool where Self: Sized {
+        if is_alive && !(2..=3).contains(&living_neighbours) {
+            false
+        } else if !is_alive && living_neighbours == 3 {
+            true
+        } else {
+            is_alive
+        }
+    }
 }
 
 pub(crate) struct SingleThreadedSolver;
@@ -35,14 +45,7 @@ impl Solver for SingleThreadedSolver {
             for column in 0..dimensions.width {
                 let is_alive = current_state[row][column];
                 let living_neighbours = Self::get_living_neighbour_count(game, row, column);
-
-                if is_alive && !(2..=3).contains(&living_neighbours) {
-                    new_state[row][column] = false;
-                } else if !is_alive && living_neighbours == 3 {
-                    new_state[row][column] = true;
-                } else {
-                    new_state[row][column] = is_alive;
-                }
+                new_state[row][column] = Self::decide_state(is_alive, living_neighbours);
             }
         }
 
