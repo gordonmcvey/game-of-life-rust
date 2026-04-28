@@ -1,5 +1,6 @@
 pub mod builder;
 pub mod render;
+mod state_computer;
 
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
