@@ -3,7 +3,7 @@ use crate::life_game::{CellData, Game};
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;
 
-    fn get_living_neighbour_count(&self, game: &Game, row: usize, column: usize) -> u8 {
+    fn get_living_neighbour_count(game: &Game, row: usize, column: usize) -> u8 where Self: Sized {
         let game_state = &game.game_state;
         let dimensions = &game.dimensions;
 
@@ -34,7 +34,7 @@ impl Solver for SingleThreadedSolver {
         for row in 0..dimensions.height {
             for column in 0..dimensions.width {
                 let is_alive = current_state[row][column];
-                let living_neighbours = self.get_living_neighbour_count(game, row, column);
+                let living_neighbours = Self::get_living_neighbour_count(game, row, column);
 
                 if is_alive && !(2..=3).contains(&living_neighbours) {
                     new_state[row][column] = false;
