@@ -2,6 +2,7 @@ pub mod builder;
 pub mod render;
 mod state_computer;
 
+use crate::life_game::state_computer::{SingleThreadedStateComputer, StateComputer};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
@@ -25,6 +26,8 @@ pub struct Game {
     iteration: usize,
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
+    // @todo Make this a dynamic dispatchable trait, so that we can swap out the state computer
+    state_computer: SingleThreadedStateComputer
 }
 
 impl Game {
@@ -38,6 +41,7 @@ impl Game {
             iteration: 0,
             game_state: vec![vec![false; width]; height],
             previous_states: [0; Self::ITERATION_HISTORY],
+            state_computer: SingleThreadedStateComputer
         }
     }
 
@@ -51,22 +55,7 @@ impl Game {
     }
 
     pub fn step(&mut self) {
-        let mut new_state = vec![vec![false; self.dimensions.width]; self.dimensions.height];
-
-        for row in 0..self.dimensions.height {
-            for column in 0..self.dimensions.width {
-                let is_alive = self.game_state[row][column];
-                let living_neighbours = self.get_living_neighbour_count(row, column);
-
-                if is_alive && !(2..=3).contains(&living_neighbours) {
-                    new_state[row][column] = false;
-                } else if !is_alive && living_neighbours == 3 {
-                    new_state[row][column] = true;
-                } else {
-                    new_state[row][column] = is_alive;
-                }
-            }
-        }
+        let new_state = self.state_computer.compute_state(self);
 
         self.previous_states[self.iteration % Self::ITERATION_HISTORY] = self.hash();
         self.iteration += 1;
@@ -102,24 +91,6 @@ impl Game {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         self.game_state.hash(&mut hasher);
         hasher.finish()
-    }
-
-    fn get_living_neighbour_count(&self, row: usize, column: usize) -> u8 {
-        let above = (row + self.dimensions.height - 1) % self.dimensions.height;
-        let below = (row + 1) % self.dimensions.height;
-        let left = (column + self.dimensions.width - 1) % self.dimensions.width;
-        let right = (column + 1) % self.dimensions.width;
-
-        let count = if self.game_state[above][left] { 1 } else { 0 }
-            + if self.game_state[above][column] { 1 } else { 0 }
-            + if self.game_state[above][right] { 1 } else { 0 }
-            + if self.game_state[row][left] { 1 } else { 0 }
-            + if self.game_state[row][right] { 1 } else { 0 }
-            + if self.game_state[below][left] { 1 } else { 0 }
-            + if self.game_state[below][column] { 1 } else { 0 }
-            + if self.game_state[below][right] { 1 } else { 0 };
-
-        count
     }
 }
 

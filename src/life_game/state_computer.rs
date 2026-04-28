@@ -1,9 +1,9 @@
 use crate::life_game::{CellData, Game};
 
-trait StateComputer {
+pub(crate) trait StateComputer {
     fn compute_state(&self, game: &Game) -> CellData;
 
-    fn get_living_neighbour_count(game: &Game, row: usize, column: usize) -> u8 {
+    fn get_living_neighbour_count(&self, game: &Game, row: usize, column: usize) -> u8 {
         let game_state = &game.game_state;
         let dimensions = &game.dimensions;
 
@@ -23,7 +23,7 @@ trait StateComputer {
     }
 }
 
-struct SingleThreadedStateComputer;
+pub(crate) struct SingleThreadedStateComputer;
 
 impl StateComputer for SingleThreadedStateComputer {
     fn compute_state(&self, game: &Game) -> CellData {
@@ -32,7 +32,7 @@ impl StateComputer for SingleThreadedStateComputer {
         for row in 0..game.dimensions.height {
             for column in 0..game.dimensions.width {
                 let is_alive = game.game_state[row][column];
-                let living_neighbours = Self::get_living_neighbour_count(game, row, column);
+                let living_neighbours = self.get_living_neighbour_count(game, row, column);
 
                 if is_alive && !(2..=3).contains(&living_neighbours) {
                     new_state[row][column] = false;
