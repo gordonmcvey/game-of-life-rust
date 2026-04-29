@@ -1,5 +1,5 @@
 use crate::life_game::render::{CharacterMapRenderer, RenderCfg, Renderer};
-use crate::life_game::solver::SingleThreadedSolver;
+use crate::life_game::solver::{SingleThreadedSolver, Solver, ThreadedSolver};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -9,14 +9,15 @@ use std::{io, process, thread};
 mod life_game;
 
 fn main() {
+    let solver = configure_solver(prompt_solver()).unwrap_or_else(|| process::exit(1));
     match prompt_mode() {
-        Ok(1) => play_game(),
-        Ok(2) => run_benchmark(),
+        Ok(1) => play_game(solver),
+        Ok(2) => run_benchmark(solver),
         _ => process::exit(1),
     }
 }
 
-fn play_game() {
+fn play_game(solver: Box<dyn Solver>) {
     let (display_width, display_height) = space_for_game();
 
     let (
@@ -30,7 +31,7 @@ fn play_game() {
     let game_height = (display_height - 3) * game_height_multiplier;
 
     let starting_state: CellData = configure_game(prompt_game(), game_width, game_height).unwrap_or_else(|| process::exit(1));
-    let mut game = Game::from_data(starting_state, Box::from(SingleThreadedSolver));
+    let mut game = Game::from_data(starting_state, solver);
 
     while !game.has_stabilised() {
         print!("\x1B[2J\x1B[1;1H");
@@ -42,14 +43,14 @@ fn play_game() {
     println!("Game over!  State stabilised after {} iterations", game.iteration());
 }
 
-fn run_benchmark() {
+fn run_benchmark(solver: Box<dyn Solver>) {
     // This is the size I get when I use the highest resolution in my terminal when it's full-screen
     // I'm not displaying anything for benchmarking, but will emulate that size for the run
     let game_width = 358;
     let game_height = 200;
 
     let starting_state: CellData = configure_game(Ok(6), game_width, game_height).unwrap_or_else(|| process::exit(1));
-    let mut game = Game::from_data(starting_state, Box::from(SingleThreadedSolver));
+    let mut game = Game::from_data(starting_state, solver);
 
     let start = Instant::now();
     let mut this_iter: usize = 0;
@@ -76,6 +77,20 @@ fn run_benchmark() {
     );
 }
 
+fn prompt_solver() -> Result<i32, ParseIntError> {
+    let mut input = String::new();
+    println!("Select solver:");
+    println!("1: Single-threaded");
+    println!("2: Simple multi-threaded (4 threads)");
+    println!();
+
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+
+    input.trim().parse::<i32>()
+}
+
 fn prompt_mode() -> Result<i32, ParseIntError> {
     let mut input = String::new();
     println!("Select mode:");
@@ -88,6 +103,17 @@ fn prompt_mode() -> Result<i32, ParseIntError> {
         .expect("Failed to read line");
 
     input.trim().parse::<i32>()
+}
+
+fn configure_solver(response: Result<i32, ParseIntError>) -> Option<Box<dyn life_game::solver::Solver>> {
+    match response {
+        Ok(1) => Some(Box::from(SingleThreadedSolver)),
+        Ok(2) => Some(Box::from(ThreadedSolver::new(4))),
+        Ok(_) | Err(_) => {
+            println!("Invalid selection");
+            None
+        },
+    }
 }
 
 fn prompt_rendering() -> Result<i32, ParseIntError> {
