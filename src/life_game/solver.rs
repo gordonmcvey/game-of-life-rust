@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use std::thread;
 
+pub type SolverBox = Box<dyn Solver>;
 
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;

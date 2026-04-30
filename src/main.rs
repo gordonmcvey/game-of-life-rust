@@ -1,5 +1,5 @@
 use crate::life_game::render::{CharacterMapRenderer, RenderCfg, Renderer};
-use crate::life_game::solver::{SingleThreadedSolver, Solver, ThreadedSolver};
+use crate::life_game::solver::{SingleThreadedSolver, SolverBox, ThreadedSolver};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -17,7 +17,7 @@ fn main() {
     }
 }
 
-fn play_game(solver: Box<dyn Solver>) {
+fn play_game(solver: SolverBox) {
     let (display_width, display_height) = space_for_game();
 
     let (
@@ -43,7 +43,7 @@ fn play_game(solver: Box<dyn Solver>) {
     println!("Game over!  State stabilised after {} iterations", game.iteration());
 }
 
-fn run_benchmark(solver: Box<dyn Solver>) {
+fn run_benchmark(solver: SolverBox) {
     // This is the size I get when I use the highest resolution in my terminal when it's full-screen
     // I'm not displaying anything for benchmarking, but will emulate that size for the run
     let game_width = 358;
@@ -105,7 +105,7 @@ fn prompt_mode() -> Result<i32, ParseIntError> {
     input.trim().parse::<i32>()
 }
 
-fn configure_solver(response: Result<i32, ParseIntError>) -> Option<Box<dyn life_game::solver::Solver>> {
+fn configure_solver(response: Result<i32, ParseIntError>) -> Option<SolverBox> {
     match response {
         Ok(1) => Some(Box::from(SingleThreadedSolver)),
         Ok(2) => Some(Box::from(ThreadedSolver::new(4))),

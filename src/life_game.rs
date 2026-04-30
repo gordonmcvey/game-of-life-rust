@@ -2,7 +2,7 @@ pub mod builder;
 pub mod render;
 pub(crate) mod solver;
 
-use crate::life_game::solver::Solver;
+use crate::life_game::solver::SolverBox;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
@@ -29,13 +29,13 @@ pub struct Game {
     iteration: usize,
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
-    solver: Box<dyn Solver>
+    solver: SolverBox
 }
 
 impl Game {
     const ITERATION_HISTORY: usize = 32;
 
-    pub fn new(dimensions: Dimensions, solver: Box<dyn Solver>) -> Self {
+    pub fn new(dimensions: Dimensions, solver: SolverBox) -> Self {
         let width = dimensions.width;
         let height = dimensions.height;
         Game {
@@ -47,7 +47,7 @@ impl Game {
         }
     }
 
-    pub fn from_data(cells: CellData, solver: Box<dyn Solver>) -> Self {
+    pub fn from_data(cells: CellData, solver: SolverBox) -> Self {
         let mut game = Self::new(
             Dimensions {
                 width: cells[0].len(),
