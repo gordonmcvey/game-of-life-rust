@@ -1,6 +1,8 @@
 use crate::life_game::{CellData, Game};
+use std::fmt::Debug;
 use std::sync::Arc;
 use std::thread;
+
 
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;
@@ -32,6 +34,13 @@ pub(crate) trait Solver {
         } else {
             is_alive
         }
+    }
+}
+
+impl Debug for dyn Solver {
+    // @todo Sensible output for debug
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "")
     }
 }
 

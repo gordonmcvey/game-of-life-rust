@@ -11,16 +11,19 @@ use std::hash::{Hash, Hasher};
 /// (so its index is the X axis coordinate).
 pub type CellData = Vec<Vec<bool>>;
 
+#[derive(Debug)]
 pub struct Dimensions {
     pub width: usize,
     pub height: usize,
 }
 
+#[derive(Debug)]
 pub struct Coordinates {
     pub x: usize,
     pub y: usize,
 }
 
+#[derive(Debug)]
 pub struct Game {
     dimensions: Dimensions,
     iteration: usize,
