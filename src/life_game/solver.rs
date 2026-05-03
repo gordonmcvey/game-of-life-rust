@@ -125,8 +125,10 @@ impl Solver for ThreadedSolver {
 impl ThreadPoolSolver {
 
     pub fn new(pool_size: usize) -> Self {
-        // Channel initialisation
+        // The job channel is used to send jobs from the main thread to the workers.
         let (job_tx, job_rx) = mpsc::channel::<Option<Job>>();
+
+        // The result channel is used to collect job results from the workers in the main thread.
         let (result_tx, result_rx) = mpsc::channel::<CellData>();
 
         // We want to share the receiving end of the job channel with all the threads in the pool.
@@ -158,8 +160,10 @@ impl ThreadPoolSolver {
 
                     match job {
                         Some(job) => {
-                            let job_result = job();
+                            // Run the job and send the result back to the main thread.
+                            //
                             // NOTE: Use of unwrap() here may require some thought.
+                            let job_result = job();
                             result_sender.send(job_result).unwrap();
                         },
                         // If we receive a None, then shut down the worker
@@ -173,6 +177,15 @@ impl ThreadPoolSolver {
             pool_size,
             job_sender: job_tx,
             result_receiver: Mutex::new(result_rx),
+        }
+    }
+}
+
+impl Drop for ThreadPoolSolver {
+    fn drop(&mut self) {
+        // Send a None shutdown signal to each worker
+        for _ in 0..self.pool_size {
+            self.job_sender.send(None).unwrap();
         }
     }
 }
