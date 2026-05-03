@@ -1,9 +1,11 @@
 use crate::life_game::{CellData, Game};
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::sync::mpsc::Sender;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 pub type SolverBox = Box<dyn Solver>;
+type Job = Box<dyn FnOnce() -> CellData + Send + 'static>;
 
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;
@@ -49,6 +51,12 @@ pub(crate) struct SingleThreadedSolver;
 
 pub(crate) struct ThreadedSolver {
     thread_count: usize,
+}
+
+pub(crate) struct ThreadPoolSolver {
+    pool_size: usize,
+    job_sender: Sender<Option<Job>>,
+    result_receiver: Mutex<mpsc::Receiver<CellData>>,
 }
 
 impl Solver for SingleThreadedSolver {
@@ -111,5 +119,66 @@ impl Solver for ThreadedSolver {
             .into_iter()
             .flat_map(|h: std::thread::JoinHandle<std::vec::Vec<_>>| h.join().unwrap())
             .collect()
+    }
+}
+
+impl ThreadPoolSolver {
+
+    pub fn new(pool_size: usize) -> Self {
+        // Channel initialisation
+        let (job_tx, job_rx) = mpsc::channel::<Option<Job>>();
+        let (result_tx, result_rx) = mpsc::channel::<CellData>();
+
+        // We want to share the receiving end of the job channel with all the threads in the pool.
+        // This is how work will be enqueued for the workers to pick up, and the mutex will prevent
+        // races between workers looking for new units of work
+        let job_receiver = Arc::new(Mutex::new(job_rx));
+
+        // Spin up the thread pool
+        for _ in 0..pool_size {
+            // There is only ever one instance of job_receiver, we're only cloning the reference to
+            // it.  However, we are cloning the result sender.  This should not violate the single
+            // consumer constraint of the mpsc channel.
+            let job_receiver = Arc::clone(&job_receiver);
+            let result_sender = result_tx.clone();
+
+            thread::spawn(move || {
+                loop {
+                    // Get a new unit of work (the mutex will lock other workers from getting the
+                    // same job, but we only need to lock it for this line so it should not cause
+                    // significant thread contention)
+                    //
+                    // NOTE: Use of unwrap() here may require some thought.
+                    let job = job_receiver
+                        .lock()
+                        .unwrap()
+                        .recv()
+                        .unwrap()
+                    ;
+
+                    match job {
+                        Some(job) => {
+                            let job_result = job();
+                            // NOTE: Use of unwrap() here may require some thought.
+                            result_sender.send(job_result).unwrap();
+                        },
+                        // If we receive a None, then shut down the worker
+                        _ => break,
+                    }
+                }
+            });
+        }
+
+        Self {
+            pool_size,
+            job_sender: job_tx,
+            result_receiver: Mutex::new(result_rx),
+        }
+    }
+}
+
+impl Solver for ThreadPoolSolver {
+    fn compute_state(&self, game: &Game) -> CellData {
+        todo!()
     }
 }
