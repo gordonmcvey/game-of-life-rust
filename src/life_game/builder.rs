@@ -23,17 +23,17 @@ pub fn u(state: &mut CellData, x: usize, y: usize) {
     let build_list: Vec<(usize, usize)> = vec!(
         (0, 0), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2),
     );
-    
+
     build(state, x, y, build_list);
 }
 
 pub fn lightweight_spaceship(state: &mut CellData, x: usize, y: usize) {
-    let build_list: Vec<(usize, usize)> = vec!(
+    let build_list: Vec<(usize, usize)> = vec![
         (0, 1),
         (1, 0),
         (2, 0), (2, 4),
         (3, 0), (3, 1), (3, 2), (3, 3),
-    );
+    ];
 
     build(state, x, y, build_list)
 }
@@ -71,7 +71,7 @@ pub fn achim_p144(state: &mut CellData, x: usize, y: usize) {
 pub fn randomise(state: &mut CellData, probability: u32) {
     match probability {
         0..=100 => (),
-        _ => panic!("Probability must be between 0 and 100")
+        _ => panic!("Probability must be between 0 and 100"),
     }
 
     let mut rng = rand::rng();

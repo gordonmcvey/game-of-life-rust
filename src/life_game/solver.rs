@@ -10,7 +10,10 @@ type Job = Box<dyn FnOnce() -> (usize, CellData) + Send + 'static>;
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;
 
-    fn get_living_neighbour_count(game_state: &CellData, row: usize, column: usize) -> u8 where Self: Sized {
+    fn get_living_neighbour_count(game_state: &CellData, row: usize, column: usize) -> u8
+    where
+        Self: Sized,
+    {
         let width = game_state[0].len();
         let height = game_state.len();
 
@@ -29,7 +32,10 @@ pub(crate) trait Solver {
             + game_state[below][right] as u8
     }
 
-    fn decide_state(is_alive: bool, living_neighbours: u8) -> bool where Self: Sized {
+    fn decide_state(is_alive: bool, living_neighbours: u8) -> bool
+    where
+        Self: Sized,
+    {
         if is_alive && !(2..=3).contains(&living_neighbours) {
             false
         } else if !is_alive && living_neighbours == 3 {
@@ -39,7 +45,16 @@ pub(crate) trait Solver {
         }
     }
 
-    fn compute_chunk(thread_id: usize, chunk_size: usize, width: usize, height: usize, thread_current: &CellData) -> CellData where Self: Sized {
+    fn compute_chunk(
+        thread_id: usize,
+        chunk_size: usize,
+        width: usize,
+        height: usize,
+        thread_current: &CellData,
+    ) -> CellData
+    where
+        Self: Sized,
+    {
         let row_start = thread_id * chunk_size;
         let row_end = (row_start + chunk_size).min(height);
         let mut new_chunk: CellData = Vec::with_capacity(row_end - row_start);
@@ -48,7 +63,8 @@ pub(crate) trait Solver {
             let mut new_row = vec![false; width];
             for column in 0..width {
                 let is_alive = thread_current[row][column];
-                let living_neighbours = Self::get_living_neighbour_count(&thread_current, row, column);
+                let living_neighbours =
+                    Self::get_living_neighbour_count(&thread_current, row, column);
 
                 new_row[column] = Self::decide_state(is_alive, living_neighbours);
             }
@@ -86,7 +102,8 @@ impl Solver for SingleThreadedSolver {
         for row in 0..game.dimensions.height {
             for column in 0..game.dimensions.width {
                 let is_alive = current_state[row][column];
-                let living_neighbours = Self::get_living_neighbour_count(current_state, row, column);
+                let living_neighbours =
+                    Self::get_living_neighbour_count(current_state, row, column);
                 new_state[row][column] = Self::decide_state(is_alive, living_neighbours);
             }
         }
@@ -102,7 +119,6 @@ impl ThreadedSolver {
 }
 
 impl Solver for ThreadedSolver {
-
     fn compute_state(&self, game: &Game) -> CellData {
         let current = Arc::new(game.game_state.clone());
 
@@ -127,7 +143,6 @@ impl Solver for ThreadedSolver {
 }
 
 impl ThreadPoolSolver {
-
     pub fn new(pool_size: usize) -> Self {
         // The job channel is used to send jobs from the main thread to the workers.
         let (job_tx, job_rx) = mpsc::channel::<Option<Job>>();
@@ -155,12 +170,7 @@ impl ThreadPoolSolver {
                     // significant thread contention)
                     //
                     // NOTE: Use of unwrap() here may require some thought.
-                    let job = job_receiver
-                        .lock()
-                        .unwrap()
-                        .recv()
-                        .unwrap()
-                    ;
+                    let job = job_receiver.lock().unwrap().recv().unwrap();
 
                     match job {
                         Some(job) => {
@@ -169,7 +179,7 @@ impl ThreadPoolSolver {
                             // NOTE: Use of unwrap() here may require some thought.
                             let job_result = job();
                             result_sender.send(job_result).unwrap();
-                        },
+                        }
                         // If we receive a None, then shut down the worker
                         _ => break,
                     }
@@ -204,7 +214,8 @@ impl Solver for ThreadPoolSolver {
         for thread_id in 0..self.pool_size {
             let thread_current = Arc::clone(&current);
             let job = Box::new(move || {
-                let new_chunk: CellData = Self::compute_chunk(thread_id, chunk_size, width, height, &thread_current);
+                let new_chunk: CellData =
+                    Self::compute_chunk(thread_id, chunk_size, width, height, &thread_current);
                 (thread_id, new_chunk)
             });
 

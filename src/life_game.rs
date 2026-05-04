@@ -29,7 +29,7 @@ pub struct Game {
     iteration: usize,
     game_state: CellData,
     previous_states: [u64; Self::ITERATION_HISTORY],
-    solver: SolverBox
+    solver: SolverBox,
 }
 
 impl Game {
@@ -43,7 +43,7 @@ impl Game {
             iteration: 0,
             game_state: vec![vec![false; width]; height],
             previous_states: [0; Self::ITERATION_HISTORY],
-            solver
+            solver,
         }
     }
 
@@ -76,19 +76,25 @@ impl Game {
         self.previous_states.contains(&self.hash())
     }
 
-    pub fn get_cell_chunk_at(&self, coordinates: &Coordinates, dimensions: &Dimensions) -> CellData {
+    pub fn get_cell_chunk_at(
+        &self,
+        coordinates: &Coordinates,
+        dimensions: &Dimensions,
+    ) -> CellData {
         // get a chunk of cells from the game state at the given co-ordinates.  The chunk will be a
         // group of cells that can be mapped onto a display character (eg if one character can
         // represent a group of 2x4 cells, then take 8 cells total, as two columns of 4 rows each
-        self.game_state.iter()
+        self.game_state
+            .iter()
             .skip(coordinates.y)
             .take(dimensions.height)
-            .map(|row|
+            .map(|row| {
                 row.iter()
                     .skip(coordinates.x)
                     .take(dimensions.width)
-                    .copied()  // Dereference the bool reference
-                    .collect::<Vec<bool>>())
+                    .copied() // Dereference the bool reference
+                    .collect::<Vec<bool>>()
+            })
             .collect()
     }
 
@@ -103,7 +109,8 @@ impl Display for Game {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let border = std::iter::repeat_n("━", self.dimensions.width).collect::<String>();
         // Output buffer should allocate 4 bytes for each cell in the grid plus 2 extra rows and columns
-        let mut output = String::with_capacity(((self.dimensions.width + 2) * (self.dimensions.height + 2)) * 4);
+        let mut output =
+            String::with_capacity(((self.dimensions.width + 2) * (self.dimensions.height + 2)) * 4);
 
         output.push('┏');
         output.push_str(&border);
@@ -142,7 +149,13 @@ mod tests {
     fn it_counts_iterations() {
         let expected = 100;
         // @todo The solver should be a mock
-        let mut game = Game::new(Dimensions { width: 10, height: 10 }, Box::from(SingleThreadedSolver));
+        let mut game = Game::new(
+            Dimensions {
+                width: 10,
+                height: 10,
+            },
+            Box::from(SingleThreadedSolver),
+        );
         assert_eq!(0, game.iteration());
 
         for _ in 0..expected {
@@ -175,11 +188,20 @@ mod tests {
         // We're dealing with a blinker with a period of 2, so iterations 0 and 1 should not be
         // considered stable, but iteration 2 is a repeat of iteration 0, so we can consider the
         // game stable even if it won't become a still-life.
-        assert!(!game.has_stabilised(), "Game should not be stable at iteration 0");
+        assert!(
+            !game.has_stabilised(),
+            "Game should not be stable at iteration 0"
+        );
         game.step();
-        assert!(!game.has_stabilised(), "Game should not be stable at iteration 1");
+        assert!(
+            !game.has_stabilised(),
+            "Game should not be stable at iteration 1"
+        );
         game.step();
-        assert!(game.has_stabilised(), "Game should be stable at iteration 2");
+        assert!(
+            game.has_stabilised(),
+            "Game should be stable at iteration 2"
+        );
     }
 
     #[test]
@@ -208,12 +230,13 @@ mod tests {
         );
 
         assert_eq!(
-            vec![
-                vec![false],
-            ],
+            vec![vec![false],],
             game.get_cell_chunk_at(
                 &Coordinates { x: 0, y: 0 },
-                &Dimensions { width: 1, height: 1 }
+                &Dimensions {
+                    width: 1,
+                    height: 1
+                }
             ),
             "Returned chunk doesn't match expected chunk value",
         );
@@ -227,7 +250,10 @@ mod tests {
             ],
             game.get_cell_chunk_at(
                 &Coordinates { x: 0, y: 6 },
-                &Dimensions { width: 4, height: 4 }
+                &Dimensions {
+                    width: 4,
+                    height: 4
+                }
             ),
             "Returned chunk doesn't match expected chunk value",
         );
@@ -240,18 +266,22 @@ mod tests {
             ],
             game.get_cell_chunk_at(
                 &Coordinates { x: 1, y: 13 },
-                &Dimensions { width: 4, height: 4 }
+                &Dimensions {
+                    width: 4,
+                    height: 4
+                }
             ),
             "Returned chunk doesn't match expected chunk value",
         );
 
         assert_eq!(
-            vec![
-                vec![true],
-            ],
+            vec![vec![true],],
             game.get_cell_chunk_at(
                 &Coordinates { x: 3, y: 15 },
-                &Dimensions { width: 4, height: 4 }
+                &Dimensions {
+                    width: 4,
+                    height: 4
+                }
             ),
             "Returned chunk doesn't match expected chunk value",
         );

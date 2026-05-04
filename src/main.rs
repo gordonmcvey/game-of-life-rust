@@ -20,17 +20,15 @@ fn main() {
 fn play_game(solver: SolverBox) {
     let (display_width, display_height) = space_for_game();
 
-    let (
-        game_width_multiplier,
-        game_height_multiplier,
-        renderer_cfg
-    ) = configure_rendering(prompt_rendering()).unwrap_or_else(|| process::exit(1));
+    let (game_width_multiplier, game_height_multiplier, renderer_cfg) =
+        configure_rendering(prompt_rendering()).unwrap_or_else(|| process::exit(1));
 
     let renderer = CharacterMapRenderer::new(renderer_cfg);
     let game_width = (display_width - 2) * game_width_multiplier;
     let game_height = (display_height - 3) * game_height_multiplier;
 
-    let starting_state: CellData = configure_game(prompt_game(), game_width, game_height).unwrap_or_else(|| process::exit(1));
+    let starting_state: CellData =
+        configure_game(prompt_game(), game_width, game_height).unwrap_or_else(|| process::exit(1));
     let mut game = Game::from_data(starting_state, solver);
 
     while !game.has_stabilised() {
@@ -40,7 +38,10 @@ fn play_game(solver: SolverBox) {
         game.step();
     }
 
-    println!("Game over!  State stabilised after {} iterations", game.iteration());
+    println!(
+        "Game over!  State stabilised after {} iterations",
+        game.iteration()
+    );
 }
 
 fn run_benchmark(solver: SolverBox) {
@@ -49,7 +50,8 @@ fn run_benchmark(solver: SolverBox) {
     let game_width = 358;
     let game_height = 200;
 
-    let starting_state: CellData = configure_game(Ok(6), game_width, game_height).unwrap_or_else(|| process::exit(1));
+    let starting_state: CellData =
+        configure_game(Ok(6), game_width, game_height).unwrap_or_else(|| process::exit(1));
     let mut game = Game::from_data(starting_state, solver);
 
     let start = Instant::now();
@@ -114,7 +116,7 @@ fn configure_solver(response: Result<i32, ParseIntError>) -> Option<SolverBox> {
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             None
-        },
+        }
     }
 }
 
@@ -124,8 +126,12 @@ fn prompt_rendering() -> Result<i32, ParseIntError> {
     println!("Select rendering mode:");
     println!("1: One cell per character  (' ', '█'),           simplest, lowest resolution");
     println!("2: Two cells per character (' ', '▀', '▄', '█'), double horizontal resolution");
-    println!("3: 4 cells per character   ('▘', '▚', '▞', '▙'), double horizontal and vertical resolution");
-    println!("4: 8 cells per character   ('⠛', '⠶', '⣤', '⣿'), double horizontal, 4x vertical resolution" );
+    println!(
+        "3: 4 cells per character   ('▘', '▚', '▞', '▙'), double horizontal and vertical resolution"
+    );
+    println!(
+        "4: 8 cells per character   ('⠛', '⠶', '⣤', '⣿'), double horizontal, 4x vertical resolution"
+    );
     println!();
     io::stdin()
         .read_line(&mut input)
@@ -143,7 +149,7 @@ fn configure_rendering(response: Result<i32, ParseIntError>) -> Option<(usize, u
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             None
-        },
+        }
     }
 }
 
@@ -167,7 +173,11 @@ fn prompt_game() -> Result<i32, ParseIntError> {
     input.trim().parse::<i32>()
 }
 
-fn configure_game(response: Result<i32, ParseIntError>, game_width: usize, game_height: usize) -> Option<CellData> {
+fn configure_game(
+    response: Result<i32, ParseIntError>,
+    game_width: usize,
+    game_height: usize,
+) -> Option<CellData> {
     let mut starting_state: CellData = vec![vec![false; game_width]; game_height];
 
     match response {
@@ -180,31 +190,31 @@ fn configure_game(response: Result<i32, ParseIntError>, game_width: usize, game_
             builder::pentadecathlon(&mut starting_state, 10, 19);
             builder::pentadecathlon(&mut starting_state, 45, 12);
             builder::pentadecathlon(&mut starting_state, 56, 34)
-        },
+        }
         Ok(2) => {
-            for col in (0 .. game_width - 12).step_by(10) {
+            for col in (0..game_width - 12).step_by(10) {
                 builder::glider(&mut starting_state, col, 0);
             }
-        },
+        }
         Ok(3) => {
-            for row in (0 .. game_height - 6).step_by(6) {
+            for row in (0..game_height - 6).step_by(6) {
                 builder::lightweight_spaceship(&mut starting_state, game_width - 10, row);
             }
         }
         Ok(4) => {
-            for row in (1 .. game_height - 23).step_by(21) {
-                for column in (1 .. game_width - 33).step_by(31) {
+            for row in (1..game_height - 23).step_by(21) {
+                for column in (1..game_width - 33).step_by(31) {
                     builder::achim_p144(&mut starting_state, column, row);
                 }
             }
-        },
+        }
         Ok(5) => builder::randomise(&mut starting_state, 5),
         Ok(6) => builder::randomise(&mut starting_state, 10),
         Ok(7) => builder::randomise(&mut starting_state, 20),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             return None;
-        },
+        }
     };
 
     Some(starting_state)
@@ -212,10 +222,7 @@ fn configure_game(response: Result<i32, ParseIntError>, game_width: usize, game_
 
 fn space_for_game() -> (usize, usize) {
     match term_size::dimensions() {
-        Some(dimensions) => (
-            min(dimensions.0, 200),
-            min(dimensions.1, 60),
-        ),
+        Some(dimensions) => (min(dimensions.0, 200), min(dimensions.1, 60)),
         None => (80, 25),
     }
 }
