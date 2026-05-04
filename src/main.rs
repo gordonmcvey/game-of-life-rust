@@ -1,5 +1,5 @@
 use crate::life_game::render::{CharacterMapRenderer, RenderCfg, Renderer};
-use crate::life_game::solver::{SingleThreadedSolver, SolverBox, ThreadedSolver};
+use crate::life_game::solver::{SingleThreadedSolver, SolverBox, ThreadPoolSolver, ThreadedSolver};
 use crate::life_game::{builder, CellData, Game};
 use std::cmp::min;
 use std::num::ParseIntError;
@@ -82,6 +82,7 @@ fn prompt_solver() -> Result<i32, ParseIntError> {
     println!("Select solver:");
     println!("1: Single-threaded");
     println!("2: Simple multi-threaded (4 threads)");
+    println!("3: Thread-pool (4 threads)");
     println!();
 
     io::stdin()
@@ -109,6 +110,7 @@ fn configure_solver(response: Result<i32, ParseIntError>) -> Option<SolverBox> {
     match response {
         Ok(1) => Some(Box::from(SingleThreadedSolver)),
         Ok(2) => Some(Box::from(ThreadedSolver::new(4))),
+        Ok(3) => Some(Box::from(ThreadPoolSolver::new(4))),
         Ok(_) | Err(_) => {
             println!("Invalid selection");
             None

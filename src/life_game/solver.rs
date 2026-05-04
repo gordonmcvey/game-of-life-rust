@@ -5,7 +5,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 pub type SolverBox = Box<dyn Solver>;
-type Job = Box<dyn FnOnce() -> CellData + Send + 'static>;
+type Job = Box<dyn FnOnce() -> (usize, CellData) + Send + 'static>;
 
 pub(crate) trait Solver {
     fn compute_state(&self, game: &Game) -> CellData;
@@ -38,6 +38,25 @@ pub(crate) trait Solver {
             is_alive
         }
     }
+
+    fn compute_chunk(thread_id: usize, chunk_size: usize, width: usize, height: usize, thread_current: &CellData) -> CellData where Self: Sized {
+        let row_start = thread_id * chunk_size;
+        let row_end = (row_start + chunk_size).min(height);
+        let mut new_chunk: CellData = Vec::with_capacity(row_end - row_start);
+
+        for row in row_start..row_end {
+            let mut new_row = vec![false; width];
+            for column in 0..width {
+                let is_alive = thread_current[row][column];
+                let living_neighbours = Self::get_living_neighbour_count(&thread_current, row, column);
+
+                new_row[column] = Self::decide_state(is_alive, living_neighbours);
+            }
+            new_chunk.push(new_row);
+        }
+
+        new_chunk
+    }
 }
 
 impl Debug for dyn Solver {
@@ -56,7 +75,7 @@ pub(crate) struct ThreadedSolver {
 pub(crate) struct ThreadPoolSolver {
     pool_size: usize,
     job_sender: Sender<Option<Job>>,
-    result_receiver: Mutex<mpsc::Receiver<CellData>>,
+    result_receiver: Mutex<mpsc::Receiver<(usize, CellData)>>,
 }
 
 impl Solver for SingleThreadedSolver {
@@ -95,22 +114,7 @@ impl Solver for ThreadedSolver {
                 let chunk_size = height.div_ceil(self.thread_count);
 
                 thread::spawn(move || {
-                    let mut new_chunk: CellData = Vec::new();
-                    let row_start = thread_id * chunk_size;
-                    let row_end = (row_start + chunk_size).min(height);
-
-                    for row in row_start..row_end {
-                        let mut new_row = vec![false; width];
-                        for column in 0..width {
-                            let is_alive = thread_current[row][column];
-                            let living_neighbours = Self::get_living_neighbour_count(&thread_current, row, column);
-
-                            new_row[column] = Self::decide_state(is_alive, living_neighbours);
-                        }
-                        new_chunk.push(new_row);
-                    }
-
-                    new_chunk
+                    Self::compute_chunk(thread_id, chunk_size, width, height, &thread_current)
                 })
             })
             .collect();
@@ -129,7 +133,7 @@ impl ThreadPoolSolver {
         let (job_tx, job_rx) = mpsc::channel::<Option<Job>>();
 
         // The result channel is used to collect job results from the workers in the main thread.
-        let (result_tx, result_rx) = mpsc::channel::<CellData>();
+        let (result_tx, result_rx) = mpsc::channel::<(usize, CellData)>();
 
         // We want to share the receiving end of the job channel with all the threads in the pool.
         // This is how work will be enqueued for the workers to pick up, and the mutex will prevent
@@ -192,6 +196,31 @@ impl Drop for ThreadPoolSolver {
 
 impl Solver for ThreadPoolSolver {
     fn compute_state(&self, game: &Game) -> CellData {
-        todo!()
+        let current = Arc::new(game.game_state.clone());
+        let width = game.dimensions.width;
+        let height = game.dimensions.height;
+        let chunk_size = height.div_ceil(self.pool_size);
+
+        for thread_id in 0..self.pool_size {
+            let thread_current = Arc::clone(&current);
+            let job = Box::new(move || {
+                let new_chunk: CellData = Self::compute_chunk(thread_id, chunk_size, width, height, &thread_current);
+                (thread_id, new_chunk)
+            });
+
+            self.job_sender.send(Some(job)).unwrap();
+        }
+
+        // Collect exactly thread_count results, then sort by starting row
+        // to reassemble in the correct order
+        let receiver = self.result_receiver.lock().unwrap();
+        let mut chunks: Vec<(usize, CellData)> = (0..self.pool_size)
+            .map(|_| receiver.recv().unwrap())
+            .collect();
+
+        // Results may arrive out of order — sort by chunk index
+        chunks.sort_by_key(|(i, _)| *i);
+        chunks.into_iter().flat_map(|(_, chunk)| chunk).collect()
+        // Vec::new()
     }
 }
