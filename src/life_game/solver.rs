@@ -8,7 +8,7 @@ pub type SolverBox = Box<dyn Solver>;
 type Job = Box<dyn FnOnce() -> (usize, CellData) + Send + 'static>;
 
 pub(crate) trait Solver {
-    fn compute_state(&self, game: &Game) -> CellData;
+    fn compute_state(&self, current_state: &CellData) -> CellData;
 
     fn get_living_neighbour_count(game_state: &CellData, row: usize, column: usize) -> u8
     where
@@ -95,12 +95,19 @@ pub(crate) struct ThreadPoolSolver {
 }
 
 impl Solver for SingleThreadedSolver {
-    fn compute_state(&self, game: &Game) -> CellData {
-        let mut new_state = vec![vec![false; game.dimensions.width]; game.dimensions.height];
-        let current_state = &game.game_state;
+    fn compute_state(&self, current_state: &CellData) -> CellData {
+        let mut new_state = current_state.clone();
+        let height = current_state.len();
+        let width = {
+            if height > 0 {
+                current_state[0].len()
+            } else {
+                0
+            }
+        };
 
-        for row in 0..game.dimensions.height {
-            for column in 0..game.dimensions.width {
+        for row in 0..height {
+            for column in 0..width {
                 let is_alive = current_state[row][column];
                 let living_neighbours =
                     Self::get_living_neighbour_count(current_state, row, column);
@@ -119,14 +126,22 @@ impl ThreadedSolver {
 }
 
 impl Solver for ThreadedSolver {
-    fn compute_state(&self, game: &Game) -> CellData {
-        let current = Arc::new(game.game_state.clone());
+    fn compute_state(&self, current_state: &CellData) -> CellData {
+        let current = Arc::new(current_state.clone());
+        let height = current_state.len();
+        let width = {
+            if height > 0 {
+                current_state[0].len()
+            } else {
+                0
+            }
+        };
 
         let handles: Vec<_> = (0..self.thread_count)
             .map(|thread_id| {
                 let thread_current = Arc::clone(&current);
-                let width = game.dimensions.width;
-                let height = game.dimensions.height;
+                // let width = game.dimensions.width;
+                // let height = game.dimensions.height;
                 let chunk_size = height.div_ceil(self.thread_count);
 
                 thread::spawn(move || {
@@ -205,10 +220,16 @@ impl Drop for ThreadPoolSolver {
 }
 
 impl Solver for ThreadPoolSolver {
-    fn compute_state(&self, game: &Game) -> CellData {
-        let current = Arc::new(game.game_state.clone());
-        let width = game.dimensions.width;
-        let height = game.dimensions.height;
+    fn compute_state(&self, current_state: &CellData) -> CellData {
+        let current = Arc::new(current_state.clone());
+        let height = current_state.len();
+        let width = {
+            if height > 0 {
+                current_state[0].len()
+            } else {
+                0
+            }
+        };
         let chunk_size = height.div_ceil(self.pool_size);
 
         for thread_id in 0..self.pool_size {
@@ -232,6 +253,5 @@ impl Solver for ThreadPoolSolver {
         // Results may arrive out of order — sort by chunk index
         chunks.sort_by_key(|(i, _)| *i);
         chunks.into_iter().flat_map(|(_, chunk)| chunk).collect()
-        // Vec::new()
     }
 }

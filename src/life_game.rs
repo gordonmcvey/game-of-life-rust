@@ -60,7 +60,7 @@ impl Game {
     }
 
     pub fn step(&mut self) {
-        let new_state = self.solver.compute_state(self);
+        let new_state = self.solver.compute_state(&self.game_state);
 
         self.previous_states[self.iteration % Self::ITERATION_HISTORY] = self.hash();
         self.iteration += 1;
