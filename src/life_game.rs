@@ -287,87 +287,90 @@ mod tests {
         );
     }
 
-    // Check that a glider evolves as expected for a game of life
-    #[test]
-    fn it_handles_a_glider_evolution() {
-        let start_state: CellData = vec![
-            vec![false, true, false, false, false, false],
-            vec![false, false, true, false, false, false],
-            vec![true, true, true, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-            vec![false, false, false, false, false, false],
-        ];
-
-        // @todo The solver should be a mock
-        let mut game = Game::from_data(start_state, Box::from(SingleThreadedSolver));
-        assert_eq!(
-            vec![
-                vec![false, true, false, false, false, false],
-                vec![false, false, true, false, false, false],
-                vec![true, true, true, false, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-            ],
-            game.game_state,
-            "State is not the specified start state",
-        );
-
-        game.step();
-        assert_eq!(
-            vec![
-                vec![false, false, false, false, false, false],
-                vec![true, false, true, false, false, false],
-                vec![false, true, true, false, false, false],
-                vec![false, true, false, false, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-            ],
-            game.game_state,
-            "State no longer resembles a glider after one iteration",
-        );
-
-        game.step();
-        assert_eq!(
-            vec![
-                vec![false, false, false, false, false, false],
-                vec![false, false, true, false, false, false],
-                vec![true, false, true, false, false, false],
-                vec![false, true, true, false, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-            ],
-            game.game_state,
-            "State no longer resembles a glider after two iterations",
-        );
-
-        game.step();
-        assert_eq!(
-            vec![
-                vec![false, false, false, false, false, false],
-                vec![false, true, false, false, false, false],
-                vec![false, false, true, true, false, false],
-                vec![false, true, true, false, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-            ],
-            game.game_state,
-            "State no longer resembles a glider after three iterations",
-        );
-
-        game.step();
-        assert_eq!(
-            vec![
-                vec![false, false, false, false, false, false],
-                vec![false, false, true, false, false, false],
-                vec![false, false, false, true, false, false],
-                vec![false, true, true, true, false, false],
-                vec![false, false, false, false, false, false],
-                vec![false, false, false, false, false, false],
-            ],
-            game.game_state,
-            "State no longer resembles a glider after four iterations",
-        );
-    }
+    // Commenting this out because it's tested in the unit tests for the solvers, we can use this
+    // as the basis for an integration test later.
+    //
+    // // Check that a glider evolves as expected for a game of life
+    // #[test]
+    // fn it_handles_a_glider_evolution() {
+    //     let start_state: CellData = vec![
+    //         vec![false, true, false, false, false, false],
+    //         vec![false, false, true, false, false, false],
+    //         vec![true, true, true, false, false, false],
+    //         vec![false, false, false, false, false, false],
+    //         vec![false, false, false, false, false, false],
+    //         vec![false, false, false, false, false, false],
+    //     ];
+    //
+    //     // @todo The solver should be a mock
+    //     let mut game = Game::from_data(start_state, Box::from(SingleThreadedSolver));
+    //     assert_eq!(
+    //         vec![
+    //             vec![false, true, false, false, false, false],
+    //             vec![false, false, true, false, false, false],
+    //             vec![true, true, true, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //         ],
+    //         game.game_state,
+    //         "State is not the specified start state",
+    //     );
+    //
+    //     game.step();
+    //     assert_eq!(
+    //         vec![
+    //             vec![false, false, false, false, false, false],
+    //             vec![true, false, true, false, false, false],
+    //             vec![false, true, true, false, false, false],
+    //             vec![false, true, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //         ],
+    //         game.game_state,
+    //         "State no longer resembles a glider after one iteration",
+    //     );
+    //
+    //     game.step();
+    //     assert_eq!(
+    //         vec![
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, true, false, false, false],
+    //             vec![true, false, true, false, false, false],
+    //             vec![false, true, true, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //         ],
+    //         game.game_state,
+    //         "State no longer resembles a glider after two iterations",
+    //     );
+    //
+    //     game.step();
+    //     assert_eq!(
+    //         vec![
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, true, false, false, false, false],
+    //             vec![false, false, true, true, false, false],
+    //             vec![false, true, true, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //         ],
+    //         game.game_state,
+    //         "State no longer resembles a glider after three iterations",
+    //     );
+    //
+    //     game.step();
+    //     assert_eq!(
+    //         vec![
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, true, false, false, false],
+    //             vec![false, false, false, true, false, false],
+    //             vec![false, true, true, true, false, false],
+    //             vec![false, false, false, false, false, false],
+    //             vec![false, false, false, false, false, false],
+    //         ],
+    //         game.game_state,
+    //         "State no longer resembles a glider after four iterations",
+    //     );
+    // }
 }
